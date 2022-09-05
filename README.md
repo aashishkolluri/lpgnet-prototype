@@ -5,7 +5,7 @@ We suggest using Anaconda for managing the environment
 ```
 wget https://repo.anaconda.com/archive/Anaconda3-2021.11-Linux-x86_64.sh
 bash Anaconda3-2021.11-Linux-x86_64.sh
-conda env create -n dpgcn --file environment.yml
+conda env create -n [env_name] --file environment.yml
 ```
 
 The data for linkteller is given in their official [repository](https://github.com/AI-secure/LinkTeller). Please download the zip file from their drive and extract it into the data folder.
