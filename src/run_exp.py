@@ -516,21 +516,16 @@ def run_all_commands(device, args):
             continue
         if arch == utils.Architecture.TwoLayerGCN:
             continue
-        # if not "gcn" in arch.value: # !!!!!!!!!!!!!!!!!!!!!!! Remove this condition later !!!!!!!!!!!!!!!!!!!
-        #     continue
         if "mmlp" in arch.value:
-            # continue ##!!!!!!!!!!!!!!!!!!!!! Remove this later !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             for i in range(1, args.max_stacked + 1):
                 arch_name = arch.name + "_nl" + str(i)
                 architecture_names.append(arch_name)
         else:
-            # continue #!!!!!!!!!!!!!!!!!!!!! Remove this later !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             arch_name = arch.name
             architecture_names.append(arch_name)
 
     attack_modes = ["baseline", "efficient"]
-    # attack_modes = ["efficient"] #!!!!!!!!!!!!!!!!!! Remove this later !!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # attack_modes = ["baseline"] #!!!!!!!!!!!!!!!!!! Remove this later !!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     if args.datasets:
         datasets = [utils.Dataset[x] for x in args.datasets.split(",")]
         sample_types = ["balanced"]
@@ -541,12 +536,12 @@ def run_all_commands(device, args):
             sample_types = ["balanced"]
             # Transductive setting datasets
             datasets = [
-                # utils.Dataset.Chameleon
-                utils.Dataset.Bipartite
-                # utils.Dataset.Cora,
-                # utils.Dataset.CiteSeer,
-                # utils.Dataset.PubMed,
-                # utils.Dataset.facebook_page,
+                utils.Dataset.Chameleon,
+                utils.Dataset.Bipartite,
+                utils.Dataset.Cora,
+                utils.Dataset.CiteSeer,
+                utils.Dataset.PubMed,
+                utils.Dataset.facebook_page,
             ]
         else:
             sample_types = ["unbalanced_hi", "unbalanced_lo", "unbalanced"]
