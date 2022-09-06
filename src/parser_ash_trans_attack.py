@@ -69,16 +69,13 @@ if __name__ == "__main__":
         
         splits = result_file.split("-")
         arch = splits[0]
-        nl = 1
         if not "mmlp" in arch:
             arch = arch.split("_")[0]
-        else:
-            nl = int(arch.split("_")[1][2])
         archs.add(arch)
         dataset = splits[1]
         dataset = dataset.lower()
         datasets.add(dataset)
-        eps = float(splits[7]) * nl * 1.0
+        eps = float(splits[7])
         epss.add(eps)
         att_type = splits[8]
         att_types.add(att_type)

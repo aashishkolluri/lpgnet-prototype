@@ -66,12 +66,9 @@ if __name__ == "__main__":
             continue
         arch = arch.lower()
         archs.add(arch)
-        nl = 1
-        if "mmlp" in arch:
-            nl = int(arch.split("_")[1][2])
         dataset = splits[1]
         datasets.add(dataset)
-        eps = float(splits[2]) * nl * 1.0
+        eps = float(splits[2])
         epss.add(eps)
 
         if not dataset in results:

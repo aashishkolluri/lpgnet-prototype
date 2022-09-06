@@ -270,7 +270,6 @@ def attack_for_config(
             print(
                 "Running dataset={} arch={} nl={} eps={}".format(dataset, arch, nl, eps)
             )
-            eps = eps*1.0/nl
         else:
             nl = 1
             print("Running dataset={} arch={} eps={}".format(dataset, arch, eps))
@@ -437,7 +436,6 @@ def train_for_config(device, outdir, num_epochs, seeds, TODOS_DIR, DONE_DIR):
             print(
                 "Running dataset={} arch={} nl={} eps={}".format(dataset, arch, nl, eps)
             )
-            eps = eps*1.0/nl
         else:
             nl = 1
             print("Running dataset={} arch={} eps={}".format(dataset, arch, eps))

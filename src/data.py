@@ -245,6 +245,15 @@ class LoadData:
             indptr = adj["indptr"]
             N, M = adj["shape"]
             adj_full = sp.csr_matrix((data, indices, indptr), (N, M))
+            # import pdb
+            # pdb.set_trace()
+            edge_index_full = self._get_edge_index_from_csr(adj_full)
+            (
+                _,
+                full_adj_orig_csr,
+            ) = self.get_adjacency_matrix(edge_index_full, self.dp, self.eps)
+            adj_full = full_adj_orig_csr
+
             adj_train = adj_full[idx_train, :][:, idx_train]
             adj_val = adj_full[temp_idx, :][:, temp_idx]
             adj_test = adj_full
@@ -254,21 +263,21 @@ class LoadData:
             (
                 self.train_adj_csr,
                 self.train_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_train, self.dp, self.eps)
+            ) = self.get_adjacency_matrix(edge_index_train)
 
             """Constructing validation set"""
             edge_index_valid = self._get_edge_index_from_csr(adj_val)
             (
                 self.val_adj_csr,
                 self.val_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_valid, self.dp, self.eps)
+            ) = self.get_adjacency_matrix(edge_index_valid)
 
             """Constructing test set"""
             edge_index_test = self._get_edge_index_from_csr(adj_test)
             (
                 self.test_adj_csr,
                 self.test_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_test, self.dp, self.eps)
+            ) = self.get_adjacency_matrix(edge_index_test)
             print(f"Data loading done: {time.time()-start_time}")
             return
         elif self.dataset == Dataset.Chameleon:

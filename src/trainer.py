@@ -147,7 +147,6 @@ def train_gcn_on_dataset(
         print("We run for seed {}".format(seeds[i]))
         data_loader = LoadData(
             dataset,
-            load_dir=str(dataset),
             dp=dp,
             eps=eps,
             rng=rng,
@@ -348,6 +347,8 @@ def train_mmlp_on_dataset(
     is_rare = "twitch" in dataset.value
 
     eps = run_config.eps
+    eps = eps*1.0/run_config.nl
+
     for i in range(iter):
         set_torch_seed(seeds[i])
         rng = np.random.default_rng(seeds[i])

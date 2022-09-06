@@ -136,8 +136,9 @@ def attack(args):
         print("Current CUDA device: {}".format(torch.cuda.current_device()))
 
     seeds = utils.get_seeds(args.num_seeds, args.sample_seed)
-    # The options used for training are not used here
+
     run_config = trainer.RunConfig(
+        learning_rate=args.lr,
         num_epochs=500,
         save_each_epoch=False,
         save_epoch=None,
@@ -147,6 +148,7 @@ def attack(args):
         nl=args.nl,
         hidden_size=args.hidden_size,
         num_hidden=args.num_hidden,
+        dropout=args.dropout
     )
     model_paths = args.model_path.split(",")
     print(run_config, model_paths)
@@ -299,6 +301,13 @@ def load_model(
         print("{} Not implemented. Skip.".format(arch))
         exit()
 
+    eps = run_config.eps
+    if arch == utils.Architecture.MMLP:
+        eps = eps*1.0/run_config.nl
+        if data_loader.dataset == utils.Dataset.Flickr:
+            eps = eps/3.0
+            print(f"For flickr changing eps from {eps} to {eps/3.0}")
+
     model = models.create_model(
         run_config,
         arch,
@@ -306,7 +315,7 @@ def load_model(
         data_loader.num_classes,
         device=device,
         adjacency_matrix=numpy_adjacency_matrix,
-        eps=run_config.eps,
+        eps=eps,
         rng=rng,
     )
 
@@ -497,6 +506,10 @@ def main():
 
     # model commands
     attack_parser = subparsers.add_parser("attack", help="attack sub-menu help")
+    attack_parser.add_argument(
+        "--lr", type=float, default=MyGlobals.lr, help="Learning rate"
+    )
+    attack_parser.add_argument("--dropout", type=float, default=MyGlobals.dropout)
     attack_parser.add_argument("--model_path", type=str, required=True)
     attack_parser.add_argument("--influence", type=float, default=MyGlobals.influence)
     attack_parser.add_argument(
