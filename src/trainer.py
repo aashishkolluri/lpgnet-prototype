@@ -150,6 +150,7 @@ def train_gcn_on_dataset(
             dp=dp,
             eps=eps,
             rng=rng,
+            rng_seed=seeds[i],
             test_dataset=test_dataset,
             split_num_for_geomGCN_dataset = i%10 
         )
@@ -252,7 +253,7 @@ def train_mlp_on_dataset(
         set_torch_seed(seeds[i])
         rng = np.random.default_rng(seeds[i])
         print("We run for seed {}".format(seeds[i]))
-        data_loader = LoadData(dataset, rng=rng, test_dataset=test_dataset, split_num_for_geomGCN_dataset = i%10 )
+        data_loader = LoadData(dataset, rng=rng, rng_seed=seeds[i], test_dataset=test_dataset, split_num_for_geomGCN_dataset = i%10 )
 
         num_classes = data_loader.num_classes
         train_features = data_loader.train_features
@@ -353,7 +354,7 @@ def train_mmlp_on_dataset(
         set_torch_seed(seeds[i])
         rng = np.random.default_rng(seeds[i])
         print("We run for seed {}".format(seeds[i]))
-        data_loader = LoadData(dataset, dp=False, rng=rng, test_dataset=test_dataset, split_num_for_geomGCN_dataset = i%10 )
+        data_loader = LoadData(dataset, dp=False, rng=rng, rng_seed=seeds[i], test_dataset=test_dataset, split_num_for_geomGCN_dataset = i%10 )
         num_classes = data_loader.num_classes
         train_features = data_loader.train_features
         train_labels = data_loader.train_labels

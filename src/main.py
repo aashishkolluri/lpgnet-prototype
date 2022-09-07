@@ -198,7 +198,7 @@ def run_attack(
     else:
         dp_for_loading_data = False
     data_loader = LoadData(
-        dataset, eps=run_config.eps, dp=dp_for_loading_data, rng=rng, test_dataset=test_dataset, split_num_for_geomGCN_dataset=spnum
+        dataset, eps=run_config.eps, dp=dp_for_loading_data, rng=rng, rng_seed=seed, test_dataset=test_dataset, split_num_for_geomGCN_dataset=spnum
     )
     print("Loaded data")
     comms_file = None
@@ -359,11 +359,12 @@ def load_and_test(args):
                 dp=args.w_dp,
                 eps=args.eps,
                 rng=rng,
+                rng_seed=seed,
                 test_dataset=args.test_dataset,
             )
         else:
             data_loader = LoadData(
-                args.dataset, dp=False, rng=rng, test_dataset=args.test_dataset
+                args.dataset, dp=False, rng=rng, rng_seed=seed, test_dataset=args.test_dataset
             )
 
         model = load_model(

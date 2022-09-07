@@ -13,7 +13,7 @@ import pandas as pd
 import os
 import time
 import gc
-
+import pickle as pkl
 from globals import MyGlobals
 
 class LoadData:
@@ -26,6 +26,7 @@ class LoadData:
         n_val=500,
         n_test=1000,
         rng=None,
+        rng_seed=None,
         test_dataset=None,
         split_num_for_geomGCN_dataset = 0
     ):
@@ -39,6 +40,7 @@ class LoadData:
         self.n_test = n_test
         self.n_val = n_val
         self.rng = rng
+        self.rng_seed = rng_seed
 
         self.test_dataset = test_dataset
         self.features = None # N \times F matrix
@@ -59,7 +61,8 @@ class LoadData:
         self.test_labels = None
         self.test_adj_csr = None
         self.test_adj_orig_csr = None
-
+        
+        self.full_adj_csr_after_dp = None
         self.split_num_for_geomGCN_dataset = split_num_for_geomGCN_dataset
         self._load_data() # fills in the values for above fields.
 
@@ -245,39 +248,69 @@ class LoadData:
             indptr = adj["indptr"]
             N, M = adj["shape"]
             adj_full = sp.csr_matrix((data, indices, indptr), (N, M))
+            adj_full_orig = adj_full.copy()
             # import pdb
             # pdb.set_trace()
-            edge_index_full = self._get_edge_index_from_csr(adj_full)
-            (
-                _,
-                full_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_full, self.dp, self.eps)
-            adj_full = full_adj_orig_csr
-
+            os.makedirs(os.path.join(MyGlobals.LK_DATA, "cache"), exist_ok=True)
+            mat_file_name = os.path.join(MyGlobals.LK_DATA, "cache", f"csr_matrix_{self.dataset.value}_{self.eps}_{self.rng_seed}.pkl")
+            full_adj_orig_csr = None
+            if not os.path.isfile(mat_file_name):
+                edge_index_full = self._get_edge_index_from_csr(adj_full)
+                (
+                    _,
+                    _,
+                ) = self.get_adjacency_matrix(edge_index_full, self.dp, self.eps)
+                if self.eps>0.0:
+                    adj_full = self.full_adj_csr_after_dp
+                with open(mat_file_name, "wb") as fp:
+                    pkl.dump(adj_full, fp)
+            else:
+                with open(mat_file_name, "rb") as fp:
+                    adj_full = pkl.load(fp)
+            
+            # import pdb
+            # pdb.set_trace()
             adj_train = adj_full[idx_train, :][:, idx_train]
             adj_val = adj_full[temp_idx, :][:, temp_idx]
             adj_test = adj_full
 
             """Constructing train set"""
             edge_index_train = self._get_edge_index_from_csr(adj_train)
+            edge_index_train = torch.cat((edge_index_train, torch.tensor([[len(idx_train)-1],[len(idx_train)-1]], dtype=torch.float64).to("cuda:0")), axis=1)
             (
                 self.train_adj_csr,
                 self.train_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_train)
+            ) = self.get_adjacency_matrix(edge_index_train, False, 0.0)
 
             """Constructing validation set"""
             edge_index_valid = self._get_edge_index_from_csr(adj_val)
+            edge_index_valid = torch.cat((edge_index_valid, torch.tensor([[len(idx_val)-1],[len(idx_val)-1]], dtype=torch.float64).to("cuda:0")), axis=1)
             (
                 self.val_adj_csr,
                 self.val_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_valid)
+            ) = self.get_adjacency_matrix(edge_index_valid, False, 0.0)
 
             """Constructing test set"""
             edge_index_test = self._get_edge_index_from_csr(adj_test)
+            edge_index_test = torch.cat((edge_index_test, torch.tensor([[len(idx_test)-1],[len(idx_test)-1]], dtype=torch.float64).to("cuda:0")), axis=1)
             (
                 self.test_adj_csr,
                 self.test_adj_orig_csr,
-            ) = self.get_adjacency_matrix(edge_index_test)
+                ) = self.get_adjacency_matrix(edge_index_test, False, 0.0)
+
+            """Replace the orig_csr matrices with the non-DP ones"""
+            if self.dp and self.eps > 0:
+                adj_train = adj_full_orig[idx_train, :][:, idx_train]
+                adj_val = adj_full_orig[temp_idx, :][:, temp_idx]
+                adj_test = adj_full_orig
+
+                edge_index_train = self._get_edge_index_from_csr(adj_train)
+                _, self.train_adj_orig_csr = self.get_adjacency_matrix(edge_index_train, False, 0.0)
+                edge_index_valid = self._get_edge_index_from_csr(adj_val)
+                _, self.val_adj_orig_csr = self.get_adjacency_matrix(edge_index_valid, False, 0.0)
+                edge_index_test = self._get_edge_index_from_csr(adj_test)
+                _, self.test_adj_orig_csr = self.get_adjacency_matrix(edge_index_test, False, 0.0)
+
             print(f"Data loading done: {time.time()-start_time}")
             return
         elif self.dataset == Dataset.Chameleon:
@@ -387,6 +420,7 @@ class LoadData:
             nondp_adj_hat_csr = adj.copy()
             if dp:
                 adj = self.lapgraph(adj, eps)
+                self.full_adj_csr_after_dp = adj
             _, adj_hat_coo = self.firstOrderGCNNorm(adj)
         else:
             nondp_adj_hat_csr = adj.copy()
@@ -394,6 +428,7 @@ class LoadData:
             if dp:
                 assert((adj.toarray()==adj.T.toarray()).all())
                 adj = self.lapgraph(adj, eps)
+                self.full_adj_csr_after_dp = adj
             _, adj_hat_coo = self.augNormGCN(adj)
         # to torch sparse matrix/pdb
         indices = torch.from_numpy(
