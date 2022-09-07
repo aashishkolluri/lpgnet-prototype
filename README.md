@@ -26,7 +26,7 @@ Here is an example to train an LPGNet (mmlp) and store results in ../results
 
 You can also run for multiple seeds using the --num_seeds option. The results are stored in the folder defined in globals.py or the directory specified using the --outdir option. The trained models are stored in the args.outdir/models directory.
 
-### Run the attacks on a single trained model for transductive
+### Run the attacks on a single trained model
 
 Running attack needs all the options used for train and a few more options in addition such as the model_path, attack_mode and sample_type (samples for evaluation).
 
