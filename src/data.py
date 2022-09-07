@@ -254,19 +254,20 @@ class LoadData:
             os.makedirs(os.path.join(MyGlobals.LK_DATA, "cache"), exist_ok=True)
             mat_file_name = os.path.join(MyGlobals.LK_DATA, "cache", f"csr_matrix_{self.dataset.value}_{self.eps}_{self.rng_seed}.pkl")
             full_adj_orig_csr = None
-            if not os.path.isfile(mat_file_name):
-                edge_index_full = self._get_edge_index_from_csr(adj_full)
-                (
-                    _,
-                    _,
-                ) = self.get_adjacency_matrix(edge_index_full, self.dp, self.eps)
-                if self.eps>0.0:
-                    adj_full = self.full_adj_csr_after_dp
-                with open(mat_file_name, "wb") as fp:
-                    pkl.dump(adj_full, fp)
-            else:
-                with open(mat_file_name, "rb") as fp:
-                    adj_full = pkl.load(fp)
+            if self.dp:
+                if not os.path.isfile(mat_file_name):
+                    edge_index_full = self._get_edge_index_from_csr(adj_full)
+                    (
+                        _,
+                        _,
+                    ) = self.get_adjacency_matrix(edge_index_full, self.dp, self.eps)
+                    if self.eps>0.0:
+                        adj_full = self.full_adj_csr_after_dp
+                    with open(mat_file_name, "wb") as fp:
+                        pkl.dump(adj_full, fp)
+                else:
+                    with open(mat_file_name, "rb") as fp:
+                        adj_full = pkl.load(fp)
             
             # import pdb
             # pdb.set_trace()
