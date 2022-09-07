@@ -10,7 +10,40 @@ conda env create -n [env_name] --file environment.yml
 
 The data for linkteller is given in their official [repository](https://github.com/AI-secure/LinkTeller). Please download the zip file from their drive and extract it into the data folder.
 
-## Hyperparameter Search
+## Quick Start: Training and Attacking single models
+
+### Run training for a single model and dataset with DP
+
+python main.py --dataset flickr --arch mmlp --nl 2 --w_dp --eps 10.0 --sample_seed 37 --hidden_size 256 --num_hidden 2 train --lr 0.0005 --dropout 0.2
+
+`python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] train --lr [Lr] --dropout [Dropout]`
+
+Here is an example for GCN
+
+`python main.py --dataset cora --arch gcn --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 train --lr 0.01--dropout 0.2`
+
+Here is an example for LPGNet (mmlp) and store results in ../results
+
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2  --outdir ../results train --lr 0.01--dropout 0.2`
+
+You can also run for multiple seeds using the --num_seeds option. The results are stored in the folder defined in globals.py or the directory specified using the --outdir option. The trained models are stored in the args.outdir/models directory.
+
+### Run the attacks on a single trained model for transductive
+
+Running attack needs all the options used for train and a few more options in addition such as the model_path, attack_mode and sample_type (samples for evaluation).
+
+`python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] attack --lr [Lr] --dropout [Dropout] --outdir [Outdir] --model_path [model paths separated by ","] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
+
+Here is an example for GCN with model stored in ../results/models/gcn/gcn.pth:
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path gcn/gcn.pth --attack_mode efficient --sample_type unbalanced`
+
+Here is an example for LPGNet (mmlp) with 2 additional mlp models stored in ../results/models/mmlp_0/mmlp_0.pth (base MLP), ../results/models/mmlp_1/mmlp_1.pth (additional stack layer 1), and ../results/models/mmlp_2/mmlp_2.pth (additional stack layer 2):
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
+
+
+## Reproducing the results
+
+To reproduce the results we provide a script in run_exp.py. You can write your own scipt as well by following the general procedure explained below.
 
 ### Hyperparameter search for transductive datasets
 
@@ -22,7 +55,6 @@ or if you wish to run on more GPUs
 
 
 ### Hyperparameter search for inductive datasets
-
 
 `python run_exp.py --num_seeds 30 --command train --outdir ../data-hyperparams-inductive --hyperparameters --todos_dir [todos] --inductive`
 
