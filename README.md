@@ -32,10 +32,12 @@ Running attack needs all the options used for training and a few more options in
 
 `python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] attack --lr [Lr] --dropout [Dropout] --outdir [Outdir] --model_path [model paths separated by ","] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
 
-Here is an example to attack a GCN model stored in ../results/models/gcn/gcn.pth:
+Here is an example to attack a GCN model stored in ../results/models/gcn/gcn.pth
+
 `python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path gcn/gcn.pth --attack_mode efficient --sample_type unbalanced`
 
-Here is an example to attack an LPGNet (mmlp) with 2 additional mlp models stored in ../results/models/mmlp_0/mmlp_0.pth (base MLP), ../results/models/mmlp_1/mmlp_1.pth (additional stack layer 1), and ../results/models/mmlp_2/mmlp_2.pth (additional stack layer 2):
+Here is an example to attack an LPGNet (mmlp) with 2 additional mlp models stored in ../results/models/mmlp_0/mmlp_0.pth (base MLP), ../results/models/mmlp_1/mmlp_1.pth (additional stack layer 1), and ../results/models/mmlp_2/mmlp_2.pth (additional stack layer 2)
+
 `python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
 
 
