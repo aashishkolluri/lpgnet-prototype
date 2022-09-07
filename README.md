@@ -28,7 +28,7 @@ You can also run for multiple seeds using the --num_seeds option. The results ar
 
 ### Run the attacks on a single trained model
 
-Running attack needs all the options used for train and a few more options in addition such as the model_path, attack_mode and sample_type (samples for evaluation).
+Running attack needs all the options used for training and a few more options in addition such as the model_path, attack_mode and sample_type (samples for evaluation).
 
 `python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] attack --lr [Lr] --dropout [Dropout] --outdir [Outdir] --model_path [model paths separated by ","] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
 
