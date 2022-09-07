@@ -278,7 +278,8 @@ class LoadData:
             """Constructing train set"""
             edge_index_train = self._get_edge_index_from_csr(adj_train)
             t_device = edge_index_train.get_device()
-            edge_index_train = torch.cat((edge_index_train, torch.tensor([[len(idx_train)-1],[len(idx_train)-1]], dtype=torch.float64).to(t_device)), axis=1)
+            if self.dp:
+                edge_index_train = torch.cat((edge_index_train, torch.tensor([[len(idx_train)-1],[len(idx_train)-1]], dtype=torch.float64).to(t_device)), axis=1)
             (
                 self.train_adj_csr,
                 self.train_adj_orig_csr,
@@ -286,7 +287,8 @@ class LoadData:
 
             """Constructing validation set"""
             edge_index_valid = self._get_edge_index_from_csr(adj_val)
-            edge_index_valid = torch.cat((edge_index_valid, torch.tensor([[len(idx_val)-1],[len(idx_val)-1]], dtype=torch.float64).to(t_device)), axis=1)
+            if self.dp:
+                edge_index_valid = torch.cat((edge_index_valid, torch.tensor([[len(idx_val)-1],[len(idx_val)-1]], dtype=torch.float64).to(t_device)), axis=1)
             (
                 self.val_adj_csr,
                 self.val_adj_orig_csr,
@@ -294,7 +296,8 @@ class LoadData:
 
             """Constructing test set"""
             edge_index_test = self._get_edge_index_from_csr(adj_test)
-            edge_index_test = torch.cat((edge_index_test, torch.tensor([[len(idx_test)-1],[len(idx_test)-1]], dtype=torch.float64).to(t_device)), axis=1)
+            if self.dp:
+                edge_index_test = torch.cat((edge_index_test, torch.tensor([[len(idx_test)-1],[len(idx_test)-1]], dtype=torch.float64).to(t_device)), axis=1)
             (
                 self.test_adj_csr,
                 self.test_adj_orig_csr,
