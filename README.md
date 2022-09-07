@@ -18,11 +18,11 @@ The data for linkteller is given in their official [repository](https://github.c
 
 Here is an example to train a GCN
 
-`python main.py --dataset cora --arch gcn --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 train --lr 0.01--dropout 0.2`
+`python main.py --dataset cora --arch gcn --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 train --lr 0.01 --dropout 0.2`
 
 Here is an example to train an LPGNet (mmlp) and store results in ../results
 
-`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2  --outdir ../results train --lr 0.01--dropout 0.2`
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2  --outdir ../results train --lr 0.01 --dropout 0.2`
 
 You can also run for multiple seeds using the --num_seeds option. The results are stored in the folder defined in globals.py or the directory specified using the --outdir option. The trained models are stored in the args.outdir/models directory.
 
