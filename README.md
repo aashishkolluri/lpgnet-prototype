@@ -14,8 +14,6 @@ The data for linkteller is given in their official [repository](https://github.c
 
 ### Run training for a single model and dataset with DP
 
-python main.py --dataset flickr --arch mmlp --nl 2 --w_dp --eps 10.0 --sample_seed 37 --hidden_size 256 --num_hidden 2 train --lr 0.0005 --dropout 0.2
-
 `python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] train --lr [Lr] --dropout [Dropout]`
 
 Here is an example for GCN
