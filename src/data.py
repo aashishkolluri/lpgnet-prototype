@@ -94,7 +94,7 @@ class LoadData:
             return True
         return False
 
-    def _get_masks_fb_page(self, dataset):
+    def _get_masks_fb_page(self, dataset, te_tr_split=0.2, val_tr_split=0.2):
         nnodes = len(dataset[0].x)
         # get train mask, test mask and validation mask
         # get an 80-20 split for train-test
@@ -105,13 +105,13 @@ class LoadData:
         test_mask = np.array([False] * nnodes)
         val_mask = np.array([False] * nnodes)
 
-        test_ind = self.rng.choice(nodes, int(0.7 * nnodes), replace=False)
+        test_ind = self.rng.choice(nodes, int(te_tr_split * nnodes), replace=False)
         test_mask[np.array(test_ind)] = True
         rem_ind = []
         for ind in range(nnodes):
             if not ind in test_ind:
                 rem_ind.append(ind)
-        val_ind = self.rng.choice(rem_ind, int(0.2 * (len(rem_ind))), replace=False)
+        val_ind = self.rng.choice(rem_ind, int(val_tr_split * (len(rem_ind))), replace=False)
         val_mask[np.array(val_ind)] = True
         train_mask[~(test_mask | val_mask)] = True
 
@@ -336,7 +336,7 @@ class LoadData:
             train_mask, val_mask, test_mask = self._get_masks_fb_page(dataset)
         elif self.dataset == Dataset.Bipartite:
             dataset = self.generateBipartite()
-            train_mask, val_mask, test_mask = self._get_masks_fb_page(dataset)
+            train_mask, val_mask, test_mask = self._get_masks_fb_page(dataset, 0.7, 0.2)
         elif self.dataset in [Dataset.Cora, Dataset.CiteSeer, Dataset.PubMed]:
             dataset = Planetoid(root=self.load_dir, name=self.dataset.name)
             train_mask = dataset[0].train_mask
