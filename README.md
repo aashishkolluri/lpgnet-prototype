@@ -38,7 +38,7 @@ Here is an example to attack a GCN model stored in ../results/models/
 
 You can also give a custom model path for attack. For instance, here is an example to attack an LPGNet (mmlp) with 2 additional mlp models. Say the models are stored in ../results/models/mmlp_0/mmlp_0.pth (base MLP), ../results/models/mmlp_1/mmlp_1.pth (additional stack layer 1), and ../results/models/mmlp_2/mmlp_2.pth (additional stack layer 2)
 
-`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 --outdir ../results attack --lr 0.01 --dropout 0.2 --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
 
 
 ## Reproducing the results
