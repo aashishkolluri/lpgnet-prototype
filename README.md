@@ -28,17 +28,17 @@ You can also run for multiple seeds using the --num_seeds option. The results ar
 
 ### Run the attacks on a single trained model
 
-Running attack needs all the options used for training and a few more options in addition such as the model_path, attack_mode and sample_type (samples for evaluation).
+To run attack on a trained model, we need all the options used for training that model and a few options in addition such as the attack_mode and sample_type (samples for evaluation).
 
-`python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] attack --lr [Lr] --dropout [Dropout] --outdir [Outdir] --model_path [model paths separated by ","] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
+`python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] --outdir [Outdir] **attack** --lr [Lr] --dropout [Dropout] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
 
-Here is an example to attack a GCN model stored in ../results/models/gcn/gcn.pth
+Here is an example to attack a GCN model stored in ../results/models/
 
-`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path gcn/gcn.pth --attack_mode efficient --sample_type unbalanced`
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 --outdir ../results attack --lr 0.01 --dropout 0.2  --attack_mode baseline --sample_type balanced`
 
-Here is an example to attack an LPGNet (mmlp) with 2 additional mlp models stored in ../results/models/mmlp_0/mmlp_0.pth (base MLP), ../results/models/mmlp_1/mmlp_1.pth (additional stack layer 1), and ../results/models/mmlp_2/mmlp_2.pth (additional stack layer 2)
+You can also give a custom model path for attack. For instance, here is an example to attack an LPGNet (mmlp) with 2 additional mlp models. Say the models are stored in ../results/models/mmlp_0/mmlp_0.pth (base MLP), ../results/models/mmlp_1/mmlp_1.pth (additional stack layer 1), and ../results/models/mmlp_2/mmlp_2.pth (additional stack layer 2)
 
-`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 attack --lr 0.01 --dropout 0.2 --outdir ../results --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
+`python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 --outdir ../results attack --lr 0.01 --dropout 0.2 --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
 
 
 ## Reproducing the results
