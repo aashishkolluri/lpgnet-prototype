@@ -46,7 +46,7 @@ You can also give a custom model path for attack. For instance, here is an examp
 
 ## Reproducing the results
 
-To reproduce the results we provide a script in run_exp.py. You can write your own scipt as well by following the general procedure explained below.
+To reproduce the results we provide a script in run_exp.py. You can write your own scipt as well that follows the general procedure explained below.
 
 ### Hyperparameter search for transductive datasets
 
