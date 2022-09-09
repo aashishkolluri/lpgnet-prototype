@@ -43,7 +43,7 @@ You can also give a custom model path for attack. For instance, here is an examp
 
 `python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 --outdir ../results attack --lr 0.01 --dropout 0.2 --model_path mmlp_0/mmlp_0.pth,mmlp_1/mmlp_1.pth,mmlp_2/mmlp_2.pth --attack_mode efficient --sample_type unbalanced`
 
-The attack results are stored inthe directory with name _eval_[dataset]_ which is placed in the current directory.
+The attack results are stored inthe directory with name _eval\_[dataset]_ which is placed in the current directory.
 
 ## Reproducing the results
 
