@@ -150,12 +150,19 @@ def attack(args):
         num_hidden=args.num_hidden,
         dropout=args.dropout
     )
-    model_paths = args.model_path.split(",")
-    print(run_config, model_paths)
+
+    print(run_config)
     for i in range(len(seeds)):
         seed = seeds[i]
         trainer.set_torch_seed(seed)
         rng = np.random.default_rng(seed=seed)
+        model_paths = []
+        if args.model_path:
+            model_paths = args.model_path.split(",")
+        else:
+            model_paths = utils.construct_model_paths(args.arch, args.dataset, run_config, seed, args.test_dataset)
+        print(model_paths)
+
         run_attack(
             args.dataset,
             args.arch,
@@ -511,7 +518,7 @@ def main():
         "--lr", type=float, default=MyGlobals.lr, help="Learning rate"
     )
     attack_parser.add_argument("--dropout", type=float, default=MyGlobals.dropout)
-    attack_parser.add_argument("--model_path", type=str, required=True)
+    attack_parser.add_argument("--model_path", type=str, default=None)
     attack_parser.add_argument("--influence", type=float, default=MyGlobals.influence)
     attack_parser.add_argument(
         "--sample_type",

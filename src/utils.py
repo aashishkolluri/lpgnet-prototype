@@ -185,3 +185,84 @@ def write_to_csv(results, path):
 
                     row = [dataset, eps, lr] + stats
                     csv_writer.writerow(row)
+
+
+def construct_model_paths(arch, dataset, run_config, seed, test_dataset):
+    hidden_size = run_config.hidden_size
+    num_hidden = run_config.num_hidden
+    dropout = run_config.dropout
+    lr = run_config.learning_rate
+    eps = run_config.eps
+    nl = run_config.nl
+    model_paths = []
+    if (
+        arch == Architecture.MMLP
+        or arch == Architecture.SimpleMMLP
+    ):
+        if not test_dataset:
+            it = 0
+            model_path = (
+                f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}-seed_{seed}-lr_{lr}-"
+                f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
+            )
+
+
+            model_paths.append(
+                os.path.join(model_path, model_path + ".pth")
+            )
+            for it in range(1, nl + 1):
+                model_path = (
+                    f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}-seed_{seed}-lr_{lr}-"
+                    f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
+                )
+
+                model_paths.append(
+                    os.path.join(model_path, model_path + ".pth")
+                )
+        else:
+            it = 0
+            model_path = (
+                f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}_{test_dataset.name}-seed_{seed}-lr_{lr}-"
+                f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
+            )
+
+
+            model_paths.append(
+                os.path.join(model_path, model_path + ".pth")
+            )
+            for it in range(1, nl + 1):
+                model_path = (
+                    f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}_{test_dataset.name}-seed_{seed}-lr_{lr}-"
+                    f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
+                )
+
+                model_paths.append(
+                    os.path.join(model_path, model_path + ".pth")
+                )
+    else:
+        nl = -1
+        if num_hidden == 2:
+            if arch == Architecture.GCN:
+                arch_name = "2layergcn"
+            else:
+                arch_name = "mlp"
+        elif num_hidden == 3:
+            if arch == Architecture.GCN:
+                arch_name = "3layergcn"
+            else:
+                arch_name = "mlp"
+        else:
+            print("num hidden not recognized")
+            exit()
+        model_path = (
+            f"arch_{arch_name}-dataset_{dataset.name}-seed_{seed}-lr_{lr}-"
+            f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
+        )
+        if test_dataset:
+            model_path = (
+                f"arch_{arch_name}-dataset_{dataset.name}_{test_dataset.name}-seed_{seed}-lr_{lr}-"
+                f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
+            )
+
+        model_paths = [os.path.join(model_path, model_path + ".pth")]
+    return model_paths
