@@ -130,7 +130,3 @@ For both transductive and inductive provide the path to the directory with saved
 `python parser_ash_trans_attack.py --results_dir [results-dir]`
 
 All the parsed results will be output in the results folder.
-
-
-### Evaluation Data
-We provide all the saved models, best configuration files, training and attack results in this [drive](https://drive.google.com/file/d/1c_J6uEe5LcmKB_ZyAMzld0rLkcJZi5IY/view?usp=sharing). The folder is large, so if you are not able to view it then we can provide the data in a different way on request.
