@@ -137,6 +137,7 @@ class MultiMLP(nn.Module):
 
     def load_model_from(self, path, device, comms_file=None):
         assert len(path) == len(self.model_list)
+        assert self.nl >= 1
         # Goes from 0 to nl
         for i in range(self.nl + 1):
             self.model_list[i].load_state_dict(torch.load(path[i]))

@@ -241,7 +241,7 @@ def run_attack(
         rng,
         test_dataset,
     )
-
+    print(model.model_list)
     if attack_mode == "efficient":
         if sample_type == "balanced_full" or sample_type == "balanced":
             (
@@ -313,7 +313,7 @@ def load_model(
         eps = eps*1.0/run_config.nl
         if data_loader.dataset == utils.Dataset.Flickr:
             eps = eps/3.0
-            print(f"For flickr changing eps from {eps} to {eps/3.0}")
+            print(f"For flickr changing eps from {run_config.eps} to {eps}")
 
     model = models.create_model(
         run_config,

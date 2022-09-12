@@ -375,7 +375,7 @@ def train_mmlp_on_dataset(
         eps_c = eps
         if dataset == utils.Dataset.Flickr:
             eps_c = eps/3.0
-            print(f"For flickr changing eps from {eps} to {eps_c}")
+            print(f"For flickr changing eps from {run_config.eps} to {eps_c}")
         
         mmlp = models.create_model(
             run_config,
