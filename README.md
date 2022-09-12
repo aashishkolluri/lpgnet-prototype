@@ -1,5 +1,7 @@
 # LPGNet
 
+We provide a prototype of Line Private Graph Networks (LPGNet) that can be used to for semi-supervised node classification with edge differential privacy. Please read our [paper](https://arxiv.org/abs/2205.03105) for more information.
+
 We suggest using Anaconda for managing the environment
 ## Setting up conda
 ```
