@@ -161,7 +161,6 @@ def attack(args):
             model_paths = args.model_path.split(",")
         else:
             model_paths = utils.construct_model_paths(args.arch, args.dataset, run_config, seed, args.test_dataset)
-        print(model_paths)
 
         run_attack(
             args.dataset,
