@@ -13,7 +13,7 @@ conda env create -n [env_name] --file environment.yml
 The data for linkteller is given in their official [repository](https://github.com/AI-secure/LinkTeller). Please download the zip file from their drive and extract it into the data folder.
 
 ## Arguments and Usage
-## Usage
+### Usage
 ```
 usage: main.py [-h]
                [--dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,flickr,bipartite,chameleon}]
@@ -26,8 +26,7 @@ usage: main.py [-h]
                [--md]
                {train,evaluate,attack} ...
 ```
-## Arguments
-### Quick reference table
+### Quick high-level reference table
 |Short|Long            |Default                      |
 |-----|----------------|-----------------------------|
 |`-h` |`--help`        |                             |
