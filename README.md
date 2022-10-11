@@ -94,7 +94,7 @@ Test on this dataset, used for Twitch
 Determines how we sample edges for attack.
 
 ### `--attack_mode` (Default: efficient)
-Choose baseline running LPA and efficient for LinkTeller.
+Choose baseline for running LPA and efficient for LinkTeller.
 
 ## Quick Start: Training and Attacking single models
 
