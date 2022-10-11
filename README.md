@@ -16,13 +16,13 @@ The data for linkteller is given in their official [repository](https://github.c
 ## Usage
 ```
 usage: main.py [-h]
-               [--dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR,flickr,bipartite,chameleon}]
+               [--dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,flickr,bipartite,chameleon}]
                --arch {mlp,mmlp,simple_mmlp,2layergcn,gcn} [--nl NL]
                [--num_seeds NUM_SEEDS] [--sample_seed SAMPLE_SEED]
                [--cuda_id CUDA_ID] [--no_cuda] [--eps EPS] [--w_dp]
                [--hidden_size HIDDEN_SIZE] [--num_hidden NUM_HIDDEN]
                [--outdir OUTDIR]
-               [--test_dataset {twitch/ES,twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR}]
+               [--test_dataset {twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR}]
                [--md]
                {train,evaluate,attack} ...
 ```
