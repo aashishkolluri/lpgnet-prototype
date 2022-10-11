@@ -22,7 +22,7 @@ usage: main.py [-h]
                [--cuda_id CUDA_ID] [--no_cuda] [--eps EPS] [--w_dp]
                [--hidden_size HIDDEN_SIZE] [--num_hidden NUM_HIDDEN]
                [--outdir OUTDIR]
-               [--test_dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR,flickr,bipartite,chameleon}]
+               [--test_dataset {twitch/ES,twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR,flickr,bipartite,chameleon}]
                [--md]
                {train,evaluate,attack} ...
 ```
