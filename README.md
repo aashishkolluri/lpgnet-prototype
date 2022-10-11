@@ -16,14 +16,19 @@ The data for linkteller is given in their official [repository](https://github.c
 ### Usage
 ```
 usage: main.py [-h]
+               --arch {mlp,mmlp,gcn}
                [--dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,flickr,bipartite,chameleon}]
-               --arch {mlp,mmlp,gcn} [--nl NL]
-               [--num_seeds NUM_SEEDS] [--sample_seed SAMPLE_SEED]
-               [--cuda_id CUDA_ID] [--no_cuda] [--eps EPS] [--w_dp]
-               [--hidden_size HIDDEN_SIZE] [--num_hidden NUM_HIDDEN]
-               [--outdir OUTDIR]
                [--test_dataset {twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR}]
-               [--md]
+               [--hidden_size HIDDEN_SIZE]
+               [--num_hidden NUM_HIDDEN]
+               [--nl NL]
+               [--w_dp]
+               [--eps EPS]
+               [--outdir OUTDIR]
+               [--num_seeds NUM_SEEDS] 
+               [--sample_seed SAMPLE_SEED]
+               [--cuda_id CUDA_ID]
+               [--no_cuda]
                {train,evaluate,attack} ...
 ```
 ### Quick high-level reference table
@@ -215,3 +220,13 @@ For both transductive and inductive provide the path to the directory with saved
 `python parser_ash_trans_attack.py --results_dir [results-dir]`
 
 All the parsed results will be output in the results folder.
+
+### If the code was helpful to you then please cite our work.
+```
+@article{kolluri2022lpgnet,
+  title={LPGNet: Link Private Graph Networks for Node Classification},
+  author={Kolluri, Aashish and Baluta, Teodora and Hooi, Bryan and Saxena, Prateek},
+  journal={arXiv preprint arXiv:2205.03105},
+  year={2022}
+}
+```
