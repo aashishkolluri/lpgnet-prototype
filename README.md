@@ -34,7 +34,7 @@ To run attack on a trained model, we need all the options used for training that
 
 `python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] --outdir [Outdir] **attack** --lr [Lr] --dropout [Dropout] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
 
-Here is an example to attack a GCN model stored in ../results/models/
+Here is an example to attack an LPGNet model stored in ../results/models/
 
 `python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 --outdir ../results attack --lr 0.01 --dropout 0.2  --attack_mode baseline --sample_type balanced`
 
