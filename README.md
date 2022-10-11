@@ -17,7 +17,7 @@ The data for linkteller is given in their official [repository](https://github.c
 ```
 usage: main.py [-h]
                [--dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,flickr,bipartite,chameleon}]
-               --arch {mlp,mmlp,simple_mmlp,2layergcn,gcn} [--nl NL]
+               --arch {mlp,mmlp,gcn} [--nl NL]
                [--num_seeds NUM_SEEDS] [--sample_seed SAMPLE_SEED]
                [--cuda_id CUDA_ID] [--no_cuda] [--eps EPS] [--w_dp]
                [--hidden_size HIDDEN_SIZE] [--num_hidden NUM_HIDDEN]
