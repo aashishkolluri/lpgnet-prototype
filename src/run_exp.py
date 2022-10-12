@@ -175,18 +175,10 @@ def create_best_todos(datasets, eps_list, architecture_names, best_configs, TODO
                         print("{}_{} missing".format(dataset, test_dataset))
                         pass
                     bc = best_configs[(utils.Dataset.TwitchES, utils.Dataset.TwitchFR)]
-                    lr = bc[0][arch][
-                        2
-                    ].run_config.learning_rate
-                    hidden_size = bc[0][arch][
-                        2
-                    ].run_config.hidden_size
-                    num_hidden = bc[0][arch][
-                        2
-                    ].run_config.num_hidden
-                    dropout = bc[0][arch][
-                        2
-                    ].run_config.dropout
+                    lr = bc[0][arch][2].run_config.learning_rate
+                    hidden_size = bc[0][arch][2].run_config.hidden_size
+                    num_hidden = bc[0][arch][2].run_config.num_hidden
+                    dropout = bc[0][arch][2].run_config.dropout
                     todos.append(
                         f"{arch_name}-{dataset.name}_{test_dataset.name}-{eps}-{lr}"
                         f"-{hidden_size}-{num_hidden}-{dropout}"
@@ -303,7 +295,6 @@ def attack_for_config(
                                 f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
                             )
 
-
                             model_paths.append(
                                 os.path.join(model_path, model_path + ".pth")
                             )
@@ -322,7 +313,6 @@ def attack_for_config(
                                 f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}_{test_dataset.name}-seed_{seed}-lr_{lr}-"
                                 f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
                             )
-
 
                             model_paths.append(
                                 os.path.join(model_path, model_path + ".pth")

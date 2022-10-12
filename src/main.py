@@ -1,6 +1,4 @@
 import os
-from tkinter import N
-from models import TwoLayerGCN, MLP, MultiMLP
 import trainer
 import utils
 from data import LoadData
@@ -9,50 +7,8 @@ import numpy as np
 import torch
 import time
 import attacker
-import torch.nn as nn
 import models
 from globals import MyGlobals
-
-
-def run_training(
-    run_config, arch, dataset, device, dp=False, seeds=[1], test_dataset=None
-):
-    print("Train and evaluate arch {}; seeds {}".format(arch.name, seeds))
-    start_time = time.time()
-    if test_dataset:
-        print("Transfer learning with separate test graph")
-
-    if arch == utils.Architecture.GCN:
-        train_stats = trainer.train_gcn_on_dataset(
-            run_config, dataset, device, dp=dp, seeds=seeds, test_dataset=test_dataset
-        )
-    elif arch == utils.Architecture.MLP:
-        if run_config.eps > 0 or dp == True:
-            print("MLP does not require DP")
-            exit()
-        train_stats = trainer.train_mlp_on_dataset(
-            run_config,
-            dataset,
-            device,
-            iter=len(seeds),
-            seeds=seeds,
-            test_dataset=test_dataset,
-        )
-    elif arch == utils.Architecture.MMLP:
-        train_stats = trainer.train_mmlp_on_dataset(
-            run_config,
-            dataset,
-            device,
-            dp=dp,
-            iter=len(seeds),
-            seeds=seeds,
-            test_dataset=test_dataset,
-        )
-    else:
-        print("Arch {} not supported".format(arch))
-        return None
-    print(f"Training time: {time.time()-start_time}")
-    return train_stats
 
 
 def train(args):
@@ -105,12 +61,13 @@ def train(args):
         test_dataset=args.test_dataset,
     )
 
-    if (
-        args.arch == utils.Architecture.MMLP
-        or args.arch == utils.Architecture.SimpleMMLP
-    ):
-        args.arch = args.arch.name + "_nl" + str(args.nl)
+    results_dict = {args.dataset: {args.eps: {}}}
+    results_dict[args.dataset][args.eps][args.arch] = train_stats
 
+    # Saving the results
+    arch_name = args.arch.name
+    if args.arch == utils.Architecture.MMLP:
+        arch_name = args.arch.name + "_nl" + str(run_config.nl)
     if args.dataset == utils.Dataset.TwitchES:
         es_identifier = args.dataset.value[args.dataset.value.find("/") + 1 :]
         identifier = args.test_dataset.value[args.test_dataset.value.find("/") + 1 :]
@@ -118,20 +75,54 @@ def train(args):
         dataset_name = es_identifier + "_" + identifier
     else:
         dataset_name = str(args.dataset)
-
-    results_dict = {args.dataset: {args.eps: {}}}
-    results_dict[args.dataset][args.eps][args.arch] = train_stats
-
     utils.save_results_pkl(
-        results_dict, args.outdir, args.arch, dataset_name, run_config
+        results_dict, args.outdir, arch_name, dataset_name, run_config
     )
+
+
+def run_training(
+    run_config, arch, dataset, device, dp=False, seeds=[1], test_dataset=None
+):
+    print("Train and evaluate arch {}; seeds {}".format(arch.name, seeds))
+    start_time = time.time()
+    if test_dataset:
+        print("Transfer learning with separate test graph")
+
+    if arch == utils.Architecture.GCN:
+        train_stats = trainer.train_gcn_on_dataset(
+            run_config, dataset, device, dp=dp, seeds=seeds, test_dataset=test_dataset
+        )
+    elif arch == utils.Architecture.MLP:
+        if run_config.eps > 0 or dp == True:
+            print("MLP does not require DP")
+            exit()
+        train_stats = trainer.train_mlp_on_dataset(
+            run_config,
+            dataset,
+            device,
+            seeds=seeds,
+            test_dataset=test_dataset,
+        )
+    elif arch == utils.Architecture.MMLP:
+        train_stats = trainer.train_mmlp_on_dataset(
+            run_config,
+            dataset,
+            device,
+            dp=dp,
+            seeds=seeds,
+            test_dataset=test_dataset,
+        )
+    else:
+        print("Arch {} not supported".format(arch))
+        return None
+    print(f"Training time: {time.time()-start_time}")
+    return train_stats
 
 
 def attack(args):
     print(args)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.is_available:
-        print(args.cuda_id)
         torch.cuda.set_device(args.cuda_id)
         print("Current CUDA device: {}".format(torch.cuda.current_device()))
 
@@ -148,19 +139,20 @@ def attack(args):
         nl=args.nl,
         hidden_size=args.hidden_size,
         num_hidden=args.num_hidden,
-        dropout=args.dropout
+        dropout=args.dropout,
     )
 
     print(run_config)
-    for i in range(len(seeds)):
-        seed = seeds[i]
+    for i, seed in enumerate(seeds):
         trainer.set_torch_seed(seed)
         rng = np.random.default_rng(seed=seed)
         model_paths = []
         if args.model_path:
             model_paths = args.model_path.split(",")
         else:
-            model_paths = utils.construct_model_paths(args.arch, args.dataset, run_config, seed, args.test_dataset)
+            model_paths = utils.construct_model_paths(
+                args.arch, args.dataset, run_config, seed, args.test_dataset
+            )
 
         run_attack(
             args.dataset,
@@ -171,13 +163,13 @@ def attack(args):
             args.influence,
             args.attack_mode,
             args.sample_type,
-            args.mode,
+            "vanilla_clean",
             seed,
             rng,
             args.outdir,
             args.n_test,
             args.test_dataset,
-            spnum = i%len(seeds)
+            spnum=i % 10,
         )
     return
 
@@ -197,21 +189,37 @@ def run_attack(
     outdir,
     n_test,
     test_dataset,
-    spnum = 0
+    spnum=0,
 ):
-    if run_config.eps > 0 and arch==utils.Architecture.GCN:
+    if run_config.eps > 0 and arch == utils.Architecture.GCN:
         dp_for_loading_data = True
     else:
         dp_for_loading_data = False
     data_loader = LoadData(
-        dataset, eps=run_config.eps, dp=dp_for_loading_data, rng=rng, rng_seed=seed, test_dataset=test_dataset, split_num_for_geomGCN_dataset=spnum
+        dataset,
+        eps=run_config.eps,
+        dp=dp_for_loading_data,
+        rng=rng,
+        rng_seed=seed,
+        test_dataset=test_dataset,
+        split_num_for_geomGCN_dataset=spnum,
     )
     print("Loaded data")
     comms_file = None
     if arch == utils.Architecture.MMLP:
-        comms_file = utils.get_comms_pkl_file_name(f'mmlp_nl{run_config.nl}', dataset, seed, test_dataset, run_config)
+        comms_file = utils.get_comms_pkl_file_name(
+            f"mmlp_nl{run_config.nl}", dataset, seed, test_dataset, run_config
+        )
     model = load_model(
-        arch, run_config, model_paths, device, data_loader, outdir, rng, attack=True, comms_file=comms_file
+        arch,
+        run_config,
+        model_paths,
+        device,
+        data_loader,
+        outdir,
+        rng,
+        attack=True,
+        comms_file=comms_file,
     )
 
     features = data_loader.test_features.to(device)
@@ -260,41 +268,23 @@ def run_attack(
     else:
         print("{} not supported".format(attack_mode))
 
-    if arch == utils.Architecture.MMLP or arch == utils.Architecture.SimpleMMLP:
-        if test_dataset:
-            prefix = (
-                f"{arch.value}_nl{run_config.nl}-{dataset.name},{test_dataset.name}-"
-                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
-                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
-                f"{run_config.eps}"
-            )
-        else:
-            prefix = (
-                f"{arch.value}_nl{run_config.nl}-{dataset.name}-"
-                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
-                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
-                f"{run_config.eps}"
-            )
-    else:
-        if test_dataset:
-            prefix = (
-                f"{arch.value}_nl{run_config.nl}-{dataset.name},{test_dataset.name}-"
-                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
-                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
-                f"{run_config.eps}"
-            )
-        else:
-            prefix = (
-                f"{arch.value}_nl{run_config.nl}-{dataset.name}-"
-                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
-                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
-                f"{run_config.eps}"
-            )
+    # Saving attack results
+    prefix = utils.get_attack_results_save_file_prefix(
+        arch, dataset, run_config, seed, test_dataset
+    )
     attack.compute_and_save(norm_exist, norm_nonexist, prefix)
 
 
 def load_model(
-    arch, run_config, model_paths, device, data_loader, outdir, rng, attack=False, comms_file=None
+    arch,
+    run_config,
+    model_paths,
+    device,
+    data_loader,
+    outdir,
+    rng,
+    attack=False,
+    comms_file=None,
 ):
     numpy_adjacency_matrix = None
     if arch == utils.Architecture.MMLP:
@@ -309,9 +299,9 @@ def load_model(
 
     eps = run_config.eps
     if arch == utils.Architecture.MMLP:
-        eps = eps*1.0/run_config.nl
+        eps = eps * 1.0 / run_config.nl
         if data_loader.dataset == utils.Dataset.Flickr:
-            eps = eps/3.0
+            eps = eps / 3.0
             print(f"For flickr changing eps from {run_config.eps} to {eps}")
 
     model = models.create_model(
@@ -334,10 +324,6 @@ def load_model(
 
 
 def load_and_test(args):
-    """
-    Currently works only if given all paths to models.
-    Have to write something that can automatically parse them
-    """
     print(args)
     print("Load and evaluate {} model".format(args.model_path))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -347,16 +333,29 @@ def load_and_test(args):
         print("Current CUDA device: {}".format(torch.cuda.current_device()))
 
     run_config = trainer.RunConfig(
+        learning_rate=args.lr,
+        num_epochs=args.num_epochs,
+        save_each_epoch=False,
+        save_epoch=None,
+        weight_decay=MyGlobals.weight_decay,
+        output_dir=os.path.join(args.outdir, "models"),
         eps=args.eps,
         nl=args.nl,
-        num_hidden=args.num_hidden,
         hidden_size=args.hidden_size,
+        num_hidden=args.num_hidden,
+        dropout=args.dropout,
     )
-    model_paths = args.model_path.split(",")
+    model_paths = []
+    if args.model_path:
+        model_paths = args.model_path.split(",")
+    else:
+        model_paths = utils.construct_model_paths(
+            args.arch, args.dataset, run_config, seed, args.test_dataset
+        )
 
     accuracies = []
     seeds = utils.get_seeds(args.num_seeds, args.sample_seed)
-    for seed in seeds:
+    for i, seed in enumerate(seeds):
         rng = np.random.default_rng(seed=seed)
         if args.arch == utils.Architecture.GCN:
             data_loader = LoadData(
@@ -367,16 +366,22 @@ def load_and_test(args):
                 rng=rng,
                 rng_seed=seed,
                 test_dataset=args.test_dataset,
+                split_num_for_geomGCN_dataset=i % 10,
             )
         else:
             data_loader = LoadData(
-                args.dataset, dp=False, rng=rng, rng_seed=seed, test_dataset=args.test_dataset
+                args.dataset,
+                dp=False,
+                rng=rng,
+                rng_seed=seed,
+                test_dataset=args.test_dataset,
+                split_num_for_geomGCN_dataset=i % 10,
             )
 
         model = load_model(
             args.arch, run_config, model_paths, device, data_loader, args.outdir, rng
         )
-        is_rare = 'twitch' in args.dataset.value
+        is_rare = "twitch" in args.dataset.value
         if args.arch == utils.Architecture.MMLP:
             test_loss, test_acc, f1_score, rare_f1_score = trainer.evaluate_mmlp(
                 model,
@@ -422,6 +427,7 @@ def main():
         type=utils.Dataset,
         choices=utils.Dataset,
         default=utils.Dataset.Cora,
+        help="cora|citeseer|pubmed...",
     )
     parser.add_argument(
         "--arch",
@@ -429,10 +435,13 @@ def main():
         choices=utils.Architecture,
         default=utils.Architecture.MMLP,
         required=True,
-        help="Type of architecture to train",
+        help="Type of architecture to train: mmlp|gcn|mlp",
     )
     parser.add_argument(
-        "--nl", type=int, default=MyGlobals.nl, help="Number of stacked models"
+        "--nl",
+        type=int,
+        default=MyGlobals.nl,
+        help="Only use for MMLP, Number of stacked models, default=-1",
     )
     parser.add_argument(
         "--num_seeds",
@@ -446,8 +455,8 @@ def main():
         default=MyGlobals.sample_seed,
         help="Run for this seed",
     )
-    parser.add_argument("--cuda_id", type=int, default=MyGlobals.cuda_id)
-    parser.add_argument("--no_cuda", action="store_true", default=False)
+    parser.add_argument("--cuda_id", type=int, default=MyGlobals.cuda_id, help="Cuda ID to use")
+    parser.add_argument("--no_cuda", action="store_true", default=False, help="Disables CUDA training.")
     parser.add_argument(
         "--eps",
         type=float,
@@ -479,7 +488,11 @@ def main():
         help="Directory to save the models and results",
     )
     parser.add_argument(
-        "--test_dataset", type=utils.Dataset, choices=utils.Dataset, default=None
+        "--test_dataset",
+        type=utils.Dataset,
+        choices=utils.Dataset,
+        default=None,
+        help="Test on this dataset, used for Twitch",
     )
 
     # Train model commands
@@ -508,17 +521,17 @@ def main():
 
     # Load and evaluate trained model commands
     eval_parser = subparsers.add_parser("evaluate", help="test sub-menu help")
-    eval_parser.add_argument("--model_path", type=str, default="")
+    eval_parser.add_argument("--model_path", type=str, default="", help="Names of the saved models (not full paths) seperated by commas.")
     eval_parser.set_defaults(func=load_and_test)
 
     # model commands
     attack_parser = subparsers.add_parser("attack", help="attack sub-menu help")
     attack_parser.add_argument(
-        "--lr", type=float, default=MyGlobals.lr, help="Learning rate"
+        "--lr", type=float, default=MyGlobals.lr, help="Need this for loading the correct saved model"
     )
-    attack_parser.add_argument("--dropout", type=float, default=MyGlobals.dropout)
-    attack_parser.add_argument("--model_path", type=str, default=None)
-    attack_parser.add_argument("--influence", type=float, default=MyGlobals.influence)
+    attack_parser.add_argument("--dropout", type=float, default=MyGlobals.dropout, help="Need this for loading the correct saved model")
+    attack_parser.add_argument("--model_path", type=str, default=None, help="Name of the saved models (not full paths) seperated by commas.")
+    attack_parser.add_argument("--influence", type=float, default=MyGlobals.influence, help="Influence factor for LinkTeller attack")
     attack_parser.add_argument(
         "--sample_type",
         type=str,
@@ -530,31 +543,19 @@ def main():
             "unbalanced_hi",
             "balanced_full",
         ],
+        help="Type of samples to use for attack",
     )
-    attack_parser.add_argument(
-        "--save_epoch",
-        type=int,
-        default=MyGlobals.save_epoch,
-        help="Save at every save_epoch",
-    )
-    attack_parser.add_argument("--approx", action="store_true", default=False)
     attack_parser.add_argument(
         "--attack_mode",
         type=str,
         default="efficient",
-        choices=["efficient", "naive", "baseline", "baseline-feat"],
-    )
-    attack_parser.add_argument(
-        "--mode",
-        type=str,
-        default="vanilla-clean",
-        help="[ vanilla | vanilla-clean | clusteradj | clusteradj-clean ] ",
+        choices=["efficient", "baseline"],
+        help="Type of attack to run. Baseline: LPA, Efficient: LinkTeller",
     )
     attack_parser.add_argument(
         "--n-test", type=int, default=MyGlobals.n_test, help="The number of nodes"
     )
     attack_parser.set_defaults(func=attack)
-
     args = parser.parse_args()
     args.func(args)
 

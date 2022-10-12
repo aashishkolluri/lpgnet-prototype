@@ -209,9 +209,7 @@ class Attacker:
         t = time.time()
 
         with torch.no_grad():
-            posterior = F.softmax(
-                self.model(self.features, self.adj_matrix), dim=1
-            )
+            posterior = F.softmax(self.model(self.features, self.adj_matrix), dim=1)
             # 1. compute the mean posterior of sampled nodes
             mean = torch.mean(posterior[self.test_nodes], dim=0)
             # 2. compute correlation value for all pairs of nodes
@@ -259,9 +257,7 @@ class Attacker:
 
         with torch.no_grad():
             # 0. compute posterior
-            posterior = F.softmax(
-                self.model(self.features, self.adj_matrix), dim=1
-            )
+            posterior = F.softmax(self.model(self.features, self.adj_matrix), dim=1)
             # 1. compute the mean posterior of sampled nodes
             mean = torch.mean(posterior, dim=0)
             # 2. compute correlation value for all pairs

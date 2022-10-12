@@ -1,11 +1,6 @@
-from cProfile import run
-from this import s
-from tkinter import N
 import numpy as np
-import scipy.sparse as sparse
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import graph_utils
 import utils
 import os
@@ -142,14 +137,14 @@ class MultiMLP(nn.Module):
         for i in range(self.nl + 1):
             self.model_list[i].load_state_dict(torch.load(path[i]))
             self.model_list[i].to(device)
-            self.model_list[i].eval()
-        
+
+        for model in self.model_list:
+            model.eval()
+
         self.communities = {}
         print("Comms file:", comms_file)
         if (not comms_file == None) and os.path.isfile(comms_file):
             self.communities = utils.load_comms_pkl(comms_file)
-        for model in self.model_list:
-            model.eval()
 
     def forward(self, x: torch.Tensor, labels: torch.Tensor = None):
 

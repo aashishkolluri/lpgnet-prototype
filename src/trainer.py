@@ -1,8 +1,6 @@
 import copy
 from dataclasses import dataclass
 import os
-from pyexpat import features
-from selectors import EpollSelector
 from globals import MyGlobals
 import torch
 import torch.nn as nn
@@ -16,13 +14,13 @@ import utils
 import graph_utils
 import models
 
+
 def set_torch_seed(seed):
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    
 
 
 @dataclass
@@ -141,18 +139,18 @@ def train_gcn_on_dataset(
     rare_f1_scores = []
     best_epochs = []
     is_rare = "twitch" in dataset.value
-    for i in range(len(seeds)):
-        set_torch_seed(seeds[i])
-        rng = np.random.default_rng(seeds[i])
-        print("We run for seed {}".format(seeds[i]))
+    for i, seed in enumerate(seeds):
+        set_torch_seed(seed)
+        rng = np.random.default_rng(seed)
+        print("We run for seed {}".format(seed))
         data_loader = LoadData(
             dataset,
             dp=dp,
             eps=eps,
             rng=rng,
-            rng_seed=seeds[i],
+            rng_seed=seed,
             test_dataset=test_dataset,
-            split_num_for_geomGCN_dataset = i%10 
+            split_num_for_geomGCN_dataset=i % 10,
         )
         num_classes = data_loader.num_classes
         train_features = data_loader.train_features
@@ -176,7 +174,7 @@ def train_gcn_on_dataset(
             run_config, utils.Architecture.GCN, train_features.size(1), num_classes
         )
 
-        trainer = Trainer(model, rng, seed=seeds[i])
+        trainer = Trainer(model, rng, seed=seed)
         val_loss, val_acc, best_epoch = trainer.train(
             dataset,
             train_features,
@@ -195,10 +193,12 @@ def train_gcn_on_dataset(
             test_features, test_labels, device, test_adjacency_matrix, is_rare=is_rare
         )
 
-        # if print_graphs:
-        #     utils.plot_graph(
-        #         orig_adj_np, trainer.out_labels, dataset.name + "_gcn_graph.png"
-        #     )
+        if print_graphs:
+            utils.plot_graph(
+                data_loader.train_adj_orig_csr.toarray(),
+                trainer.out_labels,
+                dataset.name + "_gcn_graph.png",
+            )
 
         all_outputs.append((trainer.out_labels, trainer.logits.detach().cpu()))
         test_accuracies.append(test_acc)
@@ -234,7 +234,6 @@ def train_mlp_on_dataset(
     run_config,
     dataset: utils.Dataset,
     device,
-    iter=1,
     print_graphs=False,
     seeds=[1],
     test_dataset=None,
@@ -249,11 +248,17 @@ def train_mlp_on_dataset(
     rare_f1_scores = []
     best_epochs = []
     is_rare = "twitch" in dataset.value
-    for i in range(iter):
-        set_torch_seed(seeds[i])
-        rng = np.random.default_rng(seeds[i])
-        print("We run for seed {}".format(seeds[i]))
-        data_loader = LoadData(dataset, rng=rng, rng_seed=seeds[i], test_dataset=test_dataset, split_num_for_geomGCN_dataset = i%10 )
+    for i, seed in enumerate(seeds):
+        set_torch_seed(seed)
+        rng = np.random.default_rng(seed)
+        print("We run for seed {}".format(seed))
+        data_loader = LoadData(
+            dataset,
+            rng=rng,
+            rng_seed=seed,
+            test_dataset=test_dataset,
+            split_num_for_geomGCN_dataset=i % 10,
+        )
 
         num_classes = data_loader.num_classes
         train_features = data_loader.train_features
@@ -274,7 +279,7 @@ def train_mlp_on_dataset(
             run_config, utils.Architecture.MLP, train_features.size(1), num_classes
         )
 
-        trainer = Trainer(model, rng, seed=seeds[i])
+        trainer = Trainer(model, rng, seed=seed)
         val_loss, val_acc, best_epoch = trainer.train(
             dataset,
             train_features,
@@ -291,10 +296,12 @@ def train_mlp_on_dataset(
             test_features, test_labels, device, is_rare=is_rare
         )
 
-        # if print_graphs:
-        #     utils.plot_graph(
-        #         orig_adj_np, trainer.out_labels, dataset.name + "_mlp_graph.png"
-        #     )
+        if print_graphs:
+            utils.plot_graph(
+                data_loader.train_adj_orig_csr.toarray(),
+                trainer.out_labels,
+                dataset.name + "_mlp_graph.png",
+            )
 
         all_outputs.append((trainer.out_labels, trainer.logits.detach().cpu()))
         test_accuracies.append(test_acc)
@@ -331,7 +338,6 @@ def train_mmlp_on_dataset(
     run_config,
     dataset: utils.Dataset,
     device,
-    iter=1,
     print_graphs=False,
     dp=False,
     seeds=[1],
@@ -348,13 +354,20 @@ def train_mmlp_on_dataset(
     is_rare = "twitch" in dataset.value
 
     eps = run_config.eps
-    eps = eps*1.0/run_config.nl
+    eps = eps * 1.0 / run_config.nl
 
-    for i in range(iter):
-        set_torch_seed(seeds[i])
-        rng = np.random.default_rng(seeds[i])
-        print("We run for seed {}".format(seeds[i]))
-        data_loader = LoadData(dataset, dp=False, rng=rng, rng_seed=seeds[i], test_dataset=test_dataset, split_num_for_geomGCN_dataset = i%10 )
+    for i, seed in enumerate(seeds):
+        set_torch_seed(seed)
+        rng = np.random.default_rng(seed)
+        print("We run for seed {}".format(seed))
+        data_loader = LoadData(
+            dataset,
+            dp=False,
+            rng=rng,
+            rng_seed=seed,
+            test_dataset=test_dataset,
+            split_num_for_geomGCN_dataset=i % 10,
+        )
         num_classes = data_loader.num_classes
         train_features = data_loader.train_features
         train_labels = data_loader.train_labels
@@ -371,12 +384,12 @@ def train_mmlp_on_dataset(
             is_rare = False
         if data_loader.test_dataset:
             test_dataset = data_loader.test_dataset
-        
+
         eps_c = eps
         if dataset == utils.Dataset.Flickr:
-            eps_c = eps/3.0
+            eps_c = eps / 3.0
             print(f"For flickr changing eps from {run_config.eps} to {eps_c}")
-        
+
         mmlp = models.create_model(
             run_config,
             utils.Architecture.MMLP,
@@ -393,7 +406,7 @@ def train_mmlp_on_dataset(
             )
         )
         model = mmlp.model_list[0]
-        trainer = Trainer(model, rng, seed=seeds[i])
+        trainer = Trainer(model, rng, seed=seed)
         _, _, best_epoch = trainer.train(
             dataset,
             train_features,
@@ -435,7 +448,7 @@ def train_mmlp_on_dataset(
             comm_counts_dict = graph_utils.getCommunityCountsMP(
                 orig_adj_np, out_labels_train, num_classes, rng, dp, eps_c
             )
-            mmlp.communities[it+1] = comm_counts_dict
+            mmlp.communities[it + 1] = comm_counts_dict
             comm_counts = torch.from_numpy(
                 np.array([comm_counts_dict[j] for j in comm_counts_dict])
             ).type(torch.float32)
@@ -465,7 +478,7 @@ def train_mmlp_on_dataset(
 
             model1 = mmlp.model_list[it + 1]
 
-            trainer1 = Trainer(model1, rng, seed=seeds[i])
+            trainer1 = Trainer(model1, rng, seed=seed)
             val_loss, val_acc, best_epoch = trainer1.train(
                 dataset,
                 features1,
@@ -510,16 +523,22 @@ def train_mmlp_on_dataset(
         # Saving the community dicts after the training for transductive
         comms_file = None
         if not data_loader.is_inductive():
-            comms_file = utils.get_comms_pkl_file_name(f'mmlp_nl{run_config.nl}', dataset, seeds[i], test_dataset, run_config)
+            comms_file = utils.get_comms_pkl_file_name(
+                f"mmlp_nl{run_config.nl}", dataset, seed, test_dataset, run_config
+            )
             utils.save_comms_pkl(comms_file, mmlp.communities)
         # set all the models in eval() mode
-        mmlp.prepare_for_fwd(test_features, data_loader.test_adj_orig_csr.toarray(), comms_file)
+        mmlp.prepare_for_fwd(
+            test_features, data_loader.test_adj_orig_csr.toarray(), comms_file
+        )
         test_features = test_features.to(device)
         test_labels = test_labels.to(device)
 
         outputs, test_loss = mmlp(test_features, test_labels)
         if dataset == utils.Dataset.Flickr:
-            comms_file = utils.get_comms_pkl_file_name(f'mmlp_nl{run_config.nl}', dataset, seeds[i], test_dataset, run_config)
+            comms_file = utils.get_comms_pkl_file_name(
+                f"mmlp_nl{run_config.nl}", dataset, seed, test_dataset, run_config
+            )
             utils.save_comms_pkl(comms_file, mmlp.communities)
         preds = F.softmax(outputs, dim=1)
         ignore_label = nn.CrossEntropyLoss().ignore_index
@@ -673,7 +692,11 @@ class Trainer:
                 )
                 best_model_state_dict = copy.deepcopy(self.model.state_dict())
                 dir_name = utils.get_folder_name(
-                    run_config, dataset, self.model.model_name, self.seed, test_dataset=test_dataset
+                    run_config,
+                    dataset,
+                    self.model.model_name,
+                    self.seed,
+                    test_dataset=test_dataset,
                 )
                 best_output_dir = os.path.join(run_config.output_dir, dir_name)
                 continue

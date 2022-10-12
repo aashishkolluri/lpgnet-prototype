@@ -5,35 +5,40 @@ import torch
 import io
 from globals import MyGlobals
 
+
 class CPU_Unpickler(pkl.Unpickler):
     def find_class(self, module, name):
-        if module == 'torch.storage' and name == '_load_from_bytes':
-            return lambda b: torch.load(io.BytesIO(b), map_location='cpu')
-        else: return super().find_class(module, name)
+        if module == "torch.storage" and name == "_load_from_bytes":
+            return lambda b: torch.load(io.BytesIO(b), map_location="cpu")
+        else:
+            return super().find_class(module, name)
+
 
 def getF1Scores(tobj, rare=True):
     f1_scores = np.stack(tobj.f1_scores, axis=1)
-    if rare:    
+    if rare:
         f1_scores = np.stack(tobj.rare_f1_scores, axis=1)
     mean = np.mean(f1_scores[0])
     std = np.std(f1_scores[0])
     return mean, std
 
+
 def write_to_csv(results, datasets, epss, archs):
     import csv
+
     archs = list(archs)
     archs.sort()
     archs_n = []
     for arch in archs:
-        archs_n.append(arch + '_mean')
-        archs_n.append(arch + '_std')
+        archs_n.append(arch + "_mean")
+        archs_n.append(arch + "_std")
     epss = list(epss)
     epss.sort()
     datasets = list(datasets)
     column_names = ["Epsilon"] + list(archs_n)
 
     for dataset in datasets:
-        t = 'result' + dataset + '.csv'
+        t = "result" + dataset + ".csv"
         fname = os.path.join(MyGlobals.RESULTDIR, t)
         with open(fname, "w") as f:
             csv_writer = csv.writer(f, delimiter=",")
@@ -53,9 +58,13 @@ def write_to_csv(results, datasets, epss, archs):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--results_dir", type=str, help="Folder to parse with all the pkl results", required=True
+        "--results_dir",
+        type=str,
+        help="Folder to parse with all the pkl results",
+        required=True,
     )
     # parser.add_argument("--out_path", type=str, help="Path to the parsed CSV", required=True)
 
@@ -69,7 +78,7 @@ if __name__ == "__main__":
     for result_file in results_files:
         if not result_file.endswith(".pkl"):
             continue
-        
+
         splits = result_file.split("-")
         arch = splits[0]
         arch = arch.lower()
@@ -86,11 +95,12 @@ if __name__ == "__main__":
 
         with open(os.path.join(args.results_dir, result_file), "rb") as f:
             res = CPU_Unpickler(f).load()
-            tobj = list(list(list(list(res.items())[0][1].items())[0][1].items())[0][1].items())[0][1]
+            tobj = list(
+                list(list(list(res.items())[0][1].items())[0][1].items())[0][1].items()
+            )[0][1]
         if not "flickr" in dataset:
             mean, std = getF1Scores(tobj, rare=True)
         else:
             mean, std = getF1Scores(tobj, rare=False)
         results[dataset][eps][arch] = (round(mean, 4), round(std, 4))
-        write_to_csv(results, datasets, epss, archs)             
-        
+        write_to_csv(results, datasets, epss, archs)

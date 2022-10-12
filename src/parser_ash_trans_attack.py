@@ -4,20 +4,23 @@ from sklearn import metrics
 import os
 from globals import MyGlobals
 
-def getF1Scores(tobj):    
+
+def getF1Scores(tobj):
     f1_scores = np.stack(tobj.f1_scores, axis=1)
     mean = np.mean(f1_scores[0])
     std = np.std(f1_scores[0])
     return mean, std
 
+
 def write_to_csv(results, datasets, att_types, sample_types, epss, archs):
     import csv
+
     archs = list(archs)
     archs_n = []
     archs.sort()
     for arch in archs:
-        archs_n.append(arch + '_mean')
-        archs_n.append(arch + '_std')
+        archs_n.append(arch + "_mean")
+        archs_n.append(arch + "_std")
     epss = list(epss)
     epss.sort()
     datasets = list(datasets)
@@ -39,7 +42,9 @@ def write_to_csv(results, datasets, att_types, sample_types, epss, archs):
                         for arch in archs:
                             mean, std = -1, -1
                             try:
-                                mean, std = results[dataset][(att_type,sample_type)][eps][arch]
+                                mean, std = results[dataset][(att_type, sample_type)][
+                                    eps
+                                ][arch]
                             except:
                                 pass
                             line.append(mean)
@@ -49,9 +54,13 @@ def write_to_csv(results, datasets, att_types, sample_types, epss, archs):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--results_dir", type=str, help="Folder to parse with all the models (pth files)", required=True
+        "--results_dir",
+        type=str,
+        help="Folder to parse with all the models (pth files)",
+        required=True,
     )
     # parser.add_argument("--out_path", type=str, help="Path to the parsed CSV", required=True)
 
@@ -66,7 +75,7 @@ if __name__ == "__main__":
     for result_file in results_files:
         if not result_file.endswith(".pt"):
             continue
-        
+
         splits = result_file.split("-")
         arch = splits[0]
         if not "mmlp" in arch:
@@ -94,7 +103,7 @@ if __name__ == "__main__":
         except:
             print(f"Something wrong with this file {f}")
             continue
-        auc  = metrics.auc(res["auc"]["fpr"], res["auc"]["tpr"])
+        auc = metrics.auc(res["auc"]["fpr"], res["auc"]["tpr"])
         if not arch in results[dataset][(att_type, sample_type)][eps]:
             results[dataset][(att_type, sample_type)][eps][arch] = []
         results[dataset][(att_type, sample_type)][eps][arch].append(auc)
@@ -105,6 +114,8 @@ if __name__ == "__main__":
             for eps in results[dataset][t]:
                 for arch in results[dataset][t][eps]:
                     a = results[dataset][t][eps][arch]
-                    results[dataset][t][eps][arch] = (round(np.mean(a), 4), round(np.std(a), 4))
-    write_to_csv(results, datasets, att_types, sample_types, epss, archs)             
-        
+                    results[dataset][t][eps][arch] = (
+                        round(np.mean(a), 4),
+                        round(np.std(a), 4),
+                    )
+    write_to_csv(results, datasets, att_types, sample_types, epss, archs)

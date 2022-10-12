@@ -124,27 +124,31 @@ def save_results_pkl(results_dict, outdir, arch, dataset, run_config):
     with open(filename, "wb") as f:
         pkl.dump(results_dict, f)
 
+
 def get_comms_pkl_file_name(model_name, dataset, seed, test_dataset, run_config):
-    dir_name =  get_folder_name(
-                    run_config,
-                    dataset,
-                    model_name,
-                    seed,
-                    test_dataset=test_dataset,
-                )
-    comms_file = os.path.join(run_config.output_dir, dir_name) + '_comms.txt'
+    dir_name = get_folder_name(
+        run_config,
+        dataset,
+        model_name,
+        seed,
+        test_dataset=test_dataset,
+    )
+    comms_file = os.path.join(run_config.output_dir, dir_name) + "_comms.txt"
     return comms_file
+
 
 def save_comms_pkl(comms_file, comms):
     print("Saved comms at {}".format(comms_file))
     with open(comms_file, "wb") as f:
         pkl.dump(comms, f)
 
+
 def load_comms_pkl(comms_file):
     print("Loading comms from {}".format(comms_file))
     with open(comms_file, "rb") as f:
         comms = pkl.load(f)
     return comms
+
 
 def write_to_csv(results, path):
     """Expecting to have the following keys: lr, dataset, eps, arch.
@@ -158,8 +162,8 @@ def write_to_csv(results, path):
         for dataset in results[lr]:
             for eps in results[lr][dataset]:
                 for arch in results[lr][dataset][eps]:
-                    arch_names.add(arch+" F1 Mean Score")
-                    arch_names.add(arch+" F1 Std Score")
+                    arch_names.add(arch + " F1 Mean Score")
+                    arch_names.add(arch + " F1 Std Score")
                     architectures.add(arch)
 
     column_names = ["Dataset", "Epsilon", "Lr"] + list(arch_names)
@@ -174,7 +178,9 @@ def write_to_csv(results, path):
                     for arch in architectures:
                         if arch in results[lr][dataset][eps]:
                             # This returns a TrainStats object
-                            f1_scores = np.stack(results[lr][dataset][eps][arch].f1_scores, axis=1)
+                            f1_scores = np.stack(
+                                results[lr][dataset][eps][arch].f1_scores, axis=1
+                            )
                             mean = np.mean(f1_scores[0])
                             std = np.std(f1_scores[0])
                             stats.append(mean)
@@ -195,10 +201,7 @@ def construct_model_paths(arch, dataset, run_config, seed, test_dataset):
     eps = run_config.eps
     nl = run_config.nl
     model_paths = []
-    if (
-        arch == Architecture.MMLP
-        or arch == Architecture.SimpleMMLP
-    ):
+    if arch == Architecture.MMLP or arch == Architecture.SimpleMMLP:
         if not test_dataset:
             it = 0
             model_path = (
@@ -206,19 +209,14 @@ def construct_model_paths(arch, dataset, run_config, seed, test_dataset):
                 f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
             )
 
-
-            model_paths.append(
-                os.path.join(model_path, model_path + ".pth")
-            )
+            model_paths.append(os.path.join(model_path, model_path + ".pth"))
             for it in range(1, nl + 1):
                 model_path = (
                     f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}-seed_{seed}-lr_{lr}-"
                     f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
                 )
 
-                model_paths.append(
-                    os.path.join(model_path, model_path + ".pth")
-                )
+                model_paths.append(os.path.join(model_path, model_path + ".pth"))
         else:
             it = 0
             model_path = (
@@ -226,19 +224,14 @@ def construct_model_paths(arch, dataset, run_config, seed, test_dataset):
                 f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
             )
 
-
-            model_paths.append(
-                os.path.join(model_path, model_path + ".pth")
-            )
+            model_paths.append(os.path.join(model_path, model_path + ".pth"))
             for it in range(1, nl + 1):
                 model_path = (
                     f"arch_{arch}_{nl}_{it}-dataset_{dataset.name}_{test_dataset.name}-seed_{seed}-lr_{lr}-"
                     f"hidden_size_{hidden_size}-num_hidden_{num_hidden}-dropout_{dropout}-eps_{eps}"
                 )
 
-                model_paths.append(
-                    os.path.join(model_path, model_path + ".pth")
-                )
+                model_paths.append(os.path.join(model_path, model_path + ".pth"))
     else:
         nl = -1
         if num_hidden == 2:
@@ -266,3 +259,38 @@ def construct_model_paths(arch, dataset, run_config, seed, test_dataset):
 
         model_paths = [os.path.join(model_path, model_path + ".pth")]
     return model_paths
+
+
+def get_attack_results_save_file_prefix(arch, dataset, run_config, seed, test_dataset):
+    prefix = ""
+    if arch == Architecture.MMLP or arch == Architecture.SimpleMMLP:
+        if test_dataset:
+            prefix = (
+                f"{arch.value}_nl{run_config.nl}-{dataset.name},{test_dataset.name}-"
+                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
+                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
+                f"{run_config.eps}"
+            )
+        else:
+            prefix = (
+                f"{arch.value}_nl{run_config.nl}-{dataset.name}-"
+                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
+                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
+                f"{run_config.eps}"
+            )
+    else:
+        if test_dataset:
+            prefix = (
+                f"{arch.value}_nl{run_config.nl}-{dataset.name},{test_dataset.name}-"
+                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
+                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
+                f"{run_config.eps}"
+            )
+        else:
+            prefix = (
+                f"{arch.value}_nl{run_config.nl}-{dataset.name}-"
+                f"seed_{seed}-lr_{run_config.learning_rate}-hidden_size_{run_config.hidden_size}-"
+                f"num_hidedn_{run_config.num_hidden}-dropout_{run_config.dropout}-"
+                f"{run_config.eps}"
+            )
+    return prefix

@@ -16,6 +16,7 @@ import gc
 import pickle as pkl
 from globals import MyGlobals
 
+
 class LoadData:
     def __init__(
         self,
@@ -28,11 +29,14 @@ class LoadData:
         rng=None,
         rng_seed=None,
         test_dataset=None,
-        split_num_for_geomGCN_dataset = 0
+        split_num_for_geomGCN_dataset=0,
     ):
         self.dataset = dataset
         self.load_dir = os.path.join(MyGlobals.DATADIR, load_dir)
-        if not dataset.value in ["cora", "citeseer", "pubmed"] and load_dir == "planetoid":
+        if (
+            not dataset.value in ["cora", "citeseer", "pubmed"]
+            and load_dir == "planetoid"
+        ):
             self.load_dir = os.path.join(MyGlobals.DATADIR, dataset.value)
 
         self.dp = dp
@@ -43,14 +47,16 @@ class LoadData:
         self.rng_seed = rng_seed
 
         self.test_dataset = test_dataset
-        self.features = None # N \times F matrix
-        self.labels = None # N labels
+        self.features = None  # N \times F matrix
+        self.labels = None  # N labels
         self.num_classes = None
 
         self.train_features = None
         self.train_labels = None
-        self.train_adj_csr = None # the noised and (or) normalized adjacency matrix in scipy.sparse format used for training
-        self.train_adj_orig_csr = None # original adjacency matrix scipy.sparse format for training
+        self.train_adj_csr = None  # the noised and (or) normalized adjacency matrix in scipy.sparse format used for training
+        self.train_adj_orig_csr = (
+            None  # original adjacency matrix scipy.sparse format for training
+        )
 
         self.val_features = None
         self.val_labels = None
@@ -61,10 +67,10 @@ class LoadData:
         self.test_labels = None
         self.test_adj_csr = None
         self.test_adj_orig_csr = None
-        
+
         self.full_adj_csr_after_dp = None
         self.split_num_for_geomGCN_dataset = split_num_for_geomGCN_dataset
-        self._load_data() # fills in the values for above fields.
+        self._load_data()  # fills in the values for above fields.
 
     def is_inductive(self):
         if self.dataset in (
@@ -73,7 +79,7 @@ class LoadData:
             Dataset.TwitchENGB,
             Dataset.TwitchFR,
             Dataset.TwitchPTBR,
-            Dataset.Flickr
+            Dataset.Flickr,
         ):
             return True
         return False
@@ -111,7 +117,9 @@ class LoadData:
         for ind in range(nnodes):
             if not ind in test_ind:
                 rem_ind.append(ind)
-        val_ind = self.rng.choice(rem_ind, int(val_tr_split * (len(rem_ind))), replace=False)
+        val_ind = self.rng.choice(
+            rem_ind, int(val_tr_split * (len(rem_ind))), replace=False
+        )
         val_mask[np.array(val_ind)] = True
         train_mask[~(test_mask | val_mask)] = True
 
@@ -128,9 +136,7 @@ class LoadData:
         return torch.Tensor(np.stack([t[0], t[1]])).to(device)
 
     def _load_data(self):
-        print(
-                "Load dir {}; dataset name {}".format(self.load_dir, self.dataset.name)
-            )
+        print("Load dir {}; dataset name {}".format(self.load_dir, self.dataset.name))
         start_time = time.time()
         # This dataset is used for transfer learning so uses test_dataset for pred
         if (
@@ -252,7 +258,11 @@ class LoadData:
             # import pdb
             # pdb.set_trace()
             os.makedirs(os.path.join(MyGlobals.LK_DATA, "cache"), exist_ok=True)
-            mat_file_name = os.path.join(MyGlobals.LK_DATA, "cache", f"csr_matrix_{self.dataset.value}_{self.eps}_{self.rng_seed}.pkl")
+            mat_file_name = os.path.join(
+                MyGlobals.LK_DATA,
+                "cache",
+                f"csr_matrix_{self.dataset.value}_{self.eps}_{self.rng_seed}.pkl",
+            )
             full_adj_orig_csr = None
             if self.dp:
                 if not os.path.isfile(mat_file_name):
@@ -261,14 +271,14 @@ class LoadData:
                         _,
                         _,
                     ) = self.get_adjacency_matrix(edge_index_full, self.dp, self.eps)
-                    if self.eps>0.0:
+                    if self.eps > 0.0:
                         adj_full = self.full_adj_csr_after_dp
                     with open(mat_file_name, "wb") as fp:
                         pkl.dump(adj_full, fp)
                 else:
                     with open(mat_file_name, "rb") as fp:
                         adj_full = pkl.load(fp)
-            
+
             # import pdb
             # pdb.set_trace()
             adj_train = adj_full[idx_train, :][:, idx_train]
@@ -279,7 +289,16 @@ class LoadData:
             edge_index_train = self._get_edge_index_from_csr(adj_train)
             t_device = edge_index_train.get_device()
             if self.dp:
-                edge_index_train = torch.cat((edge_index_train, torch.tensor([[len(idx_train)-1],[len(idx_train)-1]], dtype=torch.float64).to(t_device)), axis=1)
+                edge_index_train = torch.cat(
+                    (
+                        edge_index_train,
+                        torch.tensor(
+                            [[len(idx_train) - 1], [len(idx_train) - 1]],
+                            dtype=torch.float64,
+                        ).to(t_device),
+                    ),
+                    axis=1,
+                )
             (
                 self.train_adj_csr,
                 self.train_adj_orig_csr,
@@ -288,7 +307,16 @@ class LoadData:
             """Constructing validation set"""
             edge_index_valid = self._get_edge_index_from_csr(adj_val)
             if self.dp:
-                edge_index_valid = torch.cat((edge_index_valid, torch.tensor([[len(idx_val)-1],[len(idx_val)-1]], dtype=torch.float64).to(t_device)), axis=1)
+                edge_index_valid = torch.cat(
+                    (
+                        edge_index_valid,
+                        torch.tensor(
+                            [[len(idx_val) - 1], [len(idx_val) - 1]],
+                            dtype=torch.float64,
+                        ).to(t_device),
+                    ),
+                    axis=1,
+                )
             (
                 self.val_adj_csr,
                 self.val_adj_orig_csr,
@@ -297,11 +325,20 @@ class LoadData:
             """Constructing test set"""
             edge_index_test = self._get_edge_index_from_csr(adj_test)
             if self.dp:
-                edge_index_test = torch.cat((edge_index_test, torch.tensor([[len(idx_test)-1],[len(idx_test)-1]], dtype=torch.float64).to(t_device)), axis=1)
+                edge_index_test = torch.cat(
+                    (
+                        edge_index_test,
+                        torch.tensor(
+                            [[len(idx_test) - 1], [len(idx_test) - 1]],
+                            dtype=torch.float64,
+                        ).to(t_device),
+                    ),
+                    axis=1,
+                )
             (
                 self.test_adj_csr,
                 self.test_adj_orig_csr,
-                ) = self.get_adjacency_matrix(edge_index_test, False, 0.0)
+            ) = self.get_adjacency_matrix(edge_index_test, False, 0.0)
 
             """Replace the orig_csr matrices with the non-DP ones"""
             if self.dp and self.eps > 0:
@@ -310,21 +347,27 @@ class LoadData:
                 adj_test = adj_full_orig
 
                 edge_index_train = self._get_edge_index_from_csr(adj_train)
-                _, self.train_adj_orig_csr = self.get_adjacency_matrix(edge_index_train, False, 0.0)
+                _, self.train_adj_orig_csr = self.get_adjacency_matrix(
+                    edge_index_train, False, 0.0
+                )
                 edge_index_valid = self._get_edge_index_from_csr(adj_val)
-                _, self.val_adj_orig_csr = self.get_adjacency_matrix(edge_index_valid, False, 0.0)
+                _, self.val_adj_orig_csr = self.get_adjacency_matrix(
+                    edge_index_valid, False, 0.0
+                )
                 edge_index_test = self._get_edge_index_from_csr(adj_test)
-                _, self.test_adj_orig_csr = self.get_adjacency_matrix(edge_index_test, False, 0.0)
+                _, self.test_adj_orig_csr = self.get_adjacency_matrix(
+                    edge_index_test, False, 0.0
+                )
 
             print(f"Data loading done: {time.time()-start_time}")
             return
         elif self.dataset == Dataset.Chameleon:
             dataset = WikipediaNetwork(self.load_dir, "chameleon")
             train_mask = dataset[0].train_mask[:, self.split_num_for_geomGCN_dataset]
-            val_mask = dataset[0].val_mask[:,self.split_num_for_geomGCN_dataset]
+            val_mask = dataset[0].val_mask[:, self.split_num_for_geomGCN_dataset]
             test_mask = dataset[0].test_mask[:, self.split_num_for_geomGCN_dataset]
             edges = []
-            with open(os.path.join(self.load_dir,"edges_final.csv"), "r") as fp:
+            with open(os.path.join(self.load_dir, "edges_final.csv"), "r") as fp:
                 lines = fp.readlines()
                 for line in lines:
                     items = line.rstrip("\n").split(",")
@@ -376,7 +419,11 @@ class LoadData:
             )
         )
         print("len(data.x) {}".format(len(data.x)))
-        edge_index = data.edge_index if not self.dataset == Dataset.Chameleon else edge_index_chameleon
+        edge_index = (
+            data.edge_index
+            if not self.dataset == Dataset.Chameleon
+            else edge_index_chameleon
+        )
         # read & normalize adjacency matrix
         (
             self.train_adj_csr,
@@ -431,7 +478,7 @@ class LoadData:
             nondp_adj_hat_csr = adj.copy()
             nondp_adj_hat_csr = nondp_adj_hat_csr.tocsr()
             if dp:
-                assert((adj.toarray()==adj.T.toarray()).all())
+                assert (adj.toarray() == adj.T.toarray()).all()
                 adj = self.lapgraph(adj, eps)
                 self.full_adj_csr_after_dp = adj
             _, adj_hat_coo = self.augNormGCN(adj)
@@ -478,28 +525,33 @@ class LoadData:
         arr += arr.T
         return sparse.csr_matrix(arr)
 
-
     def generateBipartite(self):
         data = {}
-        data['features'] = np.array([[1,-1] for i in range(400)] + [[-1,1] for i in range(100)] + [[1,-1] for i in range(250)] + [[-1,1] for i in range(150)])
-        data['labels'] = np.array([0 for i in range(500)] + [1 for i in range(400)])
-        data['edges'] = []
+        data["features"] = np.array(
+            [[1, -1] for i in range(400)]
+            + [[-1, 1] for i in range(100)]
+            + [[1, -1] for i in range(250)]
+            + [[-1, 1] for i in range(150)]
+        )
+        data["labels"] = np.array([0 for i in range(500)] + [1 for i in range(400)])
+        data["edges"] = []
         prng_tmp = np.random.default_rng(30)
         for i in range(500):
-            for j in range(500,900):
-                if prng_tmp.choice(range(100),1) < 5: # 5% chance of having an edge
-                    data['edges'].append([i,j])
-                    data['edges'].append([j,i])
-        data['edges'] = np.array(data['edges'])
-        x = torch.from_numpy(data['features']).to(torch.float)
-        y = torch.from_numpy(data['labels']).to(torch.long)
-        edge_index = torch.from_numpy(data['edges']).to(torch.long)
+            for j in range(500, 900):
+                if prng_tmp.choice(range(100), 1) < 5:  # 5% chance of having an edge
+                    data["edges"].append([i, j])
+                    data["edges"].append([j, i])
+        data["edges"] = np.array(data["edges"])
+        x = torch.from_numpy(data["features"]).to(torch.float)
+        y = torch.from_numpy(data["labels"]).to(torch.long)
+        edge_index = torch.from_numpy(data["edges"]).to(torch.long)
         edge_index = edge_index.t().contiguous()
 
-        data = [convertToClass(x, y, edge_index), 'bipartite']
+        data = [convertToClass(x, y, edge_index), "bipartite"]
         return data
 
-class convertToClass():
+
+class convertToClass:
     def __init__(self, x, y, edge_index):
         self.x = x
         self.y = y
