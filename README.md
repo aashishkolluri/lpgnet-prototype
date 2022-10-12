@@ -12,17 +12,105 @@ conda env create -n [env_name] --file environment.yml
 
 The data for linkteller is given in their official [repository](https://github.com/AI-secure/LinkTeller). Please download the zip file from their drive and extract it into the data folder.
 
+## Arguments and Usage
+### Usage
+```
+usage: main.py [-h]
+               --arch {mlp,mmlp,gcn}
+               [--dataset {cora,citeseer,pubmed,facebook_page,twitch/ES,flickr,bipartite,chameleon}]
+               [--test_dataset {twitch/RU,twitch/DE,twitch/FR,twitch/ENGB,twitch/PTBR}]
+               [--hidden_size HIDDEN_SIZE]
+               [--num_hidden NUM_HIDDEN]
+               [--nl NL]
+               [--w_dp]
+               [--eps EPS]
+               [--outdir OUTDIR]
+               [--num_seeds NUM_SEEDS] 
+               [--sample_seed SAMPLE_SEED]
+               [--cuda_id CUDA_ID]
+               [--no_cuda]
+               {train,evaluate,attack} ...
+```
+### Quick high-level reference table
+|Short|Long            |Default                      |
+|-----|----------------|-----------------------------|
+|`-h` |`--help`        |                             |
+|     |`--dataset`     |`<Dataset.Cora: 'cora'>`     |
+|     |`--arch`        |`<Architecture.MMLP: 'mmlp'>`|
+|     |`--nl`          |`-1`                         |
+|     |`--num_seeds`   |`1`                          |
+|     |`--sample_seed` |`42`                         |
+|     |`--cuda_id`     |`0`                          |
+|     |`--no_cuda`     |                             |
+|     |`--eps`         |`0.0`                        |
+|     |`--w_dp`        |                             |
+|     |`--hidden_size` |`16`                         |
+|     |`--num_hidden`  |`2`                          |
+|     |`--outdir`      |`../results`                 |
+|     |`--test_dataset`|`None`                       |
+
+### Subparser train reference table
+|Short|Long            |Default                      |
+|-----|----------------|-----------------------------|
+|     |`--dropout`     |`0.1`                        |
+|     |`--lr`          |`0.05`                       |
+|     |`--num_epochs`  |`500`                        |
+
+### Subparser attack reference table
+|Short|Long            |Default                      |
+|-----|----------------|-----------------------------|
+|     |`--dropout`     |`0.1`                        |
+|     |`--lr`          |`0.05`                       |
+|     |`--influence`   |`0.001`                      |
+|     |`--sample_type` |`balanced`                   |
+|     |`--attack_mode` |`efficient`                  |
+|     |`--n-test`      |`500`                        |
+|     |`--model_path`  |                             |
+
+#### `--dataset` (Default: <Dataset.Cora: 'cora'>)
+cora|citeseer|pubmed...
+
+#### `--arch` (Default: <Architecture.MMLP: 'mmlp'>)
+Type of architecture to train: mmlp|gcn|mlp
+
+#### `--nl` (Default: -1)
+Only use for MMLP, Number of stacked models, default=-1
+
+#### `--eps` (Default: 0.0)
+The privacy budget. If 0, then do not DP train the arch
+
+#### `--w_dp`
+Run with DP guarantees - if eps=0.0 it throws a warning
+
+#### `--hidden_size` (Default: 16)
+Size of the hidden layers
+
+#### `--num_hidden` (Default: 2)
+Number of hidden layers
+
+#### `--outdir` (Default: ../results)
+Directory to save the models and results
+
+#### `--test_dataset` (Default: None)
+Test on this dataset, used for Twitch
+
+#### `--sample_type` (Default: balanced)
+Determines how we sample edges for attack.
+
+#### `--attack_mode` (Default: efficient)
+Choose baseline for running LPA and efficient for LinkTeller.
+
 ## Quick Start: Training and Attacking single models
 
 ### Run training for a single model and dataset with DP
 
 `python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] train --lr [Lr] --dropout [Dropout]`
 
-Here is an example to train a GCN
+* Here is an example to train a GCN
 
 `python main.py --dataset cora --arch gcn --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 train --lr 0.01 --dropout 0.2`
 
-Here is an example to train an LPGNet (mmlp) and store results in ../results
+* Here is an example to train an LPGNet (mmlp) and store results in ../results
 
 `python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2  --outdir ../results train --lr 0.01 --dropout 0.2`
 
@@ -34,7 +122,7 @@ To run attack on a trained model, we need all the options used for training that
 
 `python main.py --dataset [Dataset] --arch [mmlp|gcn|mlp] --nl [# stack layers for mmlp] --w_dp --eps [Eps] --sample_seed [Seed] --hidden_size [HID_s] --num_hidden [HID_n] --outdir [Outdir] **attack** --lr [Lr] --dropout [Dropout] --attack_mode [bbaseline (lpa) | efficient (linkteller)] --sample_type [balanced | unbalanced]`
 
-Here is an example to attack a GCN model stored in ../results/models/
+* Here is an example to attack an LPGNet model stored in ../results/models/
 
 `python main.py --dataset cora --arch mmlp --nl 2 --w_dp --eps 4.0 --sample_seed 42 --hidden_size 256 --num_hidden 2 --outdir ../results attack --lr 0.01 --dropout 0.2  --attack_mode baseline --sample_type balanced`
 
@@ -55,7 +143,7 @@ To reproduce the results we provide a script in run_exp.py. You can write your o
 
 `python run_exp.py --num_seeds 30 --command train --outdir ../data-hyperparams --hyperparameters --todos_dir [todos]`
 
-or if you wish to run on more GPUs
+* or if you wish to run on more GPUs
 
 `for cuda in $(seq 0 7); do python run_exp.py --num_seeds 30 --command train --outdir ../data-hyperparams --hyperparameters --todos_dir [todos] --cuda_id $cuda  & done`
 
@@ -64,7 +152,7 @@ or if you wish to run on more GPUs
 
 `python run_exp.py --num_seeds 30 --command train --outdir ../data-hyperparams-inductive --hyperparameters --todos_dir [todos] --inductive`
 
-or if you wish to spawn one process per GPU (0-7)
+* or if you wish to spawn one process per GPU (0-7)
 
 `for cuda in $(seq 0 7); do python run_exp.py --num_seeds 30 --command train --outdir ../data-hyperparams-inductive --hyperparameters --todos_dir [todos] --cuda_id $cuda --inductive & done`
 
@@ -132,3 +220,13 @@ For both transductive and inductive provide the path to the directory with saved
 `python parser_ash_trans_attack.py --results_dir [results-dir]`
 
 All the parsed results will be output in the results folder.
+
+### If the code was helpful to you then please cite our work.
+```
+@article{kolluri2022lpgnet,
+  title={LPGNet: Link Private Graph Networks for Node Classification},
+  author={Kolluri, Aashish and Baluta, Teodora and Hooi, Bryan and Saxena, Prateek},
+  journal={arXiv preprint arXiv:2205.03105},
+  year={2022}
+}
+```
